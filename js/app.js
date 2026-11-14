@@ -1,8 +1,10 @@
 // 畫面流程：首頁 → 國家 → 艦級 → 單艦 → 事件。
 // 目前位置完全由網址的 # 決定，例如 #/japan/yamato-class/yamato/leyte-gulf。
 // ESC 就是把網址往上退一層。這個檔案不放任何船艦內容，內容都在 data/ 裡。
-import { Globe } from './globe.js';
-import { photoHTML, galleryHTML, thumbHTML, hydrate } from './images.js';
+// 版本號（index.html 裡 app.js?v=N 的 N）一路傳給其他模組，避免瀏覽器沿用舊的快取
+const VERSION = new URL(import.meta.url).search;
+const { Globe } = await import('./globe.js' + VERSION);
+const { photoHTML, galleryHTML, thumbHTML, hydrate } = await import('./images.js' + VERSION);
 
 const d3 = window.d3;
 const $ = s => document.querySelector(s);
@@ -26,7 +28,7 @@ const classCache = new Map();
 async function loadClass(countryId, classId) {
   const key = `${countryId}/${classId}`;
   if (!classCache.has(key)) {
-    classCache.set(key, fetch(`data/${key}.json`).then(r => {
+    classCache.set(key, fetch(`data/${key}.json`, { cache: 'no-cache' }).then(r => {
       if (!r.ok) throw new Error(`讀不到 data/${key}.json`);
       return r.json();
     }));
@@ -237,7 +239,7 @@ globe.on('hover', ({ country, marker, x, y }) => {
 
 // ---------- 啟動 ----------
 (async function init() {
-  countries = (await (await fetch('data/countries.json')).json()).countries;
+  countries = (await (await fetch('data/countries.json', { cache: 'no-cache' })).json()).countries;
   await globe.load('vendor/countries-50m.json', 'vendor/countries-110m.json', countries);
   route();
 })().catch(err => {

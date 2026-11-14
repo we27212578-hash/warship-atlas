@@ -6,7 +6,7 @@
 <title>全球戰艦史料室 | Global Warship Atlas</title>
 <meta name="description" content="在情報室風格的 3D 地球上，瀏覽 1945 年以前各國大型艦艇的艦級、單艦與作戰經歷。">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body>
 <canvas id="globe" aria-label="可轉動的全球戰略地圖"></canvas>
@@ -49,6 +49,7 @@
 
 <script src="vendor/d3.min.js"></script>
 <script src="vendor/topojson-client.min.js"></script>
-<script type="module" src="js/app.js"></script>
+<!-- 每次修改 js/ 或 css/ 後，把這一行與上方 style.css 的 v= 數字加 1，瀏覽器才會立刻抓新版而不是用快取 -->
+<script type="module" src="js/app.js?v=2"></script>
 </body>
 </html>
