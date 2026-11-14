@@ -367,19 +367,68 @@ export class Globe {
       ctx.drawImage(entry.layer, 0, 0); ctx.restore();
     };
 
+    // 以國旗中心當地的「東」與「南」為座標軸，圖案就會固定在地表上，不會隨視角歪斜
+    const frame = shown ? this._localFrame(lon, lat) : null;
+    const local = draw => { ctx.save(); ctx.transform(frame.a, frame.b, frame.c, frame.d, x, y); draw(); ctx.restore(); };
+
     if (flag.mode === 'emblem') {
       layer();
       if (!shown || !entry.emblemImg) return;
       const r = Math.max(size[0] * k / 2, 16);
-      this._drawRays(x, y, r * 1.08, r * 2.1, glow, a, t, 24);
-      ctx.save();
-      ctx.globalAlpha = a;
-      ctx.shadowColor = glow; ctx.shadowBlur = 10 + 6 * Math.sin(t / 600);
-      ctx.drawImage(entry.emblemImg, x - r, y - r, r * 2, r * 2);
-      ctx.restore();
+      local(() => {
+        this._drawRays(0, 0, r * 1.08, r * 2.1, glow, a, t, 24);
+        ctx.globalAlpha = a;
+        ctx.shadowColor = glow; ctx.shadowBlur = 10 + 6 * Math.sin(t / 600);
+        ctx.drawImage(entry.emblemImg, -r, -r, r * 2, r * 2);
+      });
     } else {
-      if (shown) { const r = Math.max(Math.min(size[0], size[1]) * k / 2, 14); this._drawRays(x, y, r * 0.9, r * 2.3, glow, a * 0.8, t, 32); }
+      if (shown) { const r = Math.max(Math.min(size[0], size[1]) * k / 2, 14); local(() => this._drawRays(0, 0, r * 0.9, r * 2.3, glow, a * 0.8, t, 32)); }
       layer();
+    }
+  }
+
+  // 傳回把「當地東、南方向的 1 像素」對應到螢幕的 2x2 矩陣（正對鏡頭時是單位矩陣）
+  _localFrame(lon, lat) {
+    const az = d3.geoAzimuthalEquidistant().rotate([-lon, -lat]).scale(180 / Math.PI).translate([0, 0]);
+    const o = this.projection([lon, lat]), d = 0.5, k = d * RAD * this.radius;
+    const e = this.projection(az.invert([d, 0])), s = this.projection(az.invert([0, d]));
+    return { a: (e[0] - o[0]) / k, b: (e[1] - o[1]) / k, c: (s[0] - o[0]) / k, d: (s[1] - o[1]) / k };
+  }
+
+  // 把國旗切成小三角形逐片貼到球面上：國旗的上方永遠朝北，靠近地球邊緣時會跟著地表一起縮短
+  _drawFlagOnSphere(g, img, lon, lat, size, n) {
+    const az = d3.geoAzimuthalEquidistant().rotate([-lon, -lat]).scale(180 / Math.PI).translate([0, 0]);
+    const aspect = img.width / img.height;
+    const W = Math.max(size[0], size[1] * aspect), H = W / aspect;   // 等比例放大到蓋滿指定範圍（單位：度）
+    const nx = n, ny = Math.max(4, Math.round(n / aspect));
+    const pts = [];
+    for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
+      const ll = az.invert([(i / nx - 0.5) * W, (j / ny - 0.5) * H]);
+      const vis = this._visible(ll[0], ll[1]);
+      pts.push({ u: i / nx * img.width, v: j / ny * img.height, p: vis ? this.projection(ll) : null });
+    }
+    const tri = (A, B, C) => {
+      if (!A.p || !B.p || !C.p) return;
+      // 解出把圖片座標 (u,v) 對應到螢幕座標的仿射轉換
+      const det = (B.u - A.u) * (C.v - A.v) - (C.u - A.u) * (B.v - A.v);
+      if (!det) return;
+      const m11 = ((B.p[0] - A.p[0]) * (C.v - A.v) - (C.p[0] - A.p[0]) * (B.v - A.v)) / det;
+      const m12 = ((B.p[1] - A.p[1]) * (C.v - A.v) - (C.p[1] - A.p[1]) * (B.v - A.v)) / det;
+      const m21 = ((C.p[0] - A.p[0]) * (B.u - A.u) - (B.p[0] - A.p[0]) * (C.u - A.u)) / det;
+      const m22 = ((C.p[1] - A.p[1]) * (B.u - A.u) - (B.p[1] - A.p[1]) * (C.u - A.u)) / det;
+      const cx = (A.p[0] + B.p[0] + C.p[0]) / 3, cy = (A.p[1] + B.p[1] + C.p[1]) / 3;
+      const grow = q => { const dx = q[0] - cx, dy = q[1] - cy, l = Math.hypot(dx, dy) || 1; return [q[0] + dx / l * 0.8, q[1] + dy / l * 0.8]; };   // 稍微放大避免接縫
+      const a = grow(A.p), b = grow(B.p), c = grow(C.p);
+      g.save();
+      g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.closePath(); g.clip();
+      g.transform(m11, m12, m21, m22, A.p[0] - m11 * A.u - m21 * A.v, A.p[1] - m12 * A.u - m22 * A.v);
+      g.drawImage(img, 0, 0);
+      g.restore();
+    };
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const q = j * (nx + 1) + i;
+      tri(pts[q], pts[q + 1], pts[q + nx + 1]);
+      tri(pts[q + 1], pts[q + nx + 2], pts[q + nx + 1]);
     }
   }
 
@@ -416,13 +465,8 @@ export class Globe {
       const img = entry.flagImg, [lon, lat] = flag.center;
       g.save(); g.beginPath(); path(core); g.clip();
       g.fillRect(cx - R, cy - R, R * 2, R * 2);   // 國旗蓋不到的離島先墊底色
-      if (this._visible(lon, lat)) {
-        const [x, y] = this.projection([lon, lat]);
-        const bw = flag.size[0] * RAD * R, bh = flag.size[1] * RAD * R;
-        const sc = Math.max(bw / img.width, bh / img.height);   // 等比例放大到蓋滿
-        g.globalAlpha = 0.96;
-        g.drawImage(img, x - img.width * sc / 2, y - img.height * sc / 2, img.width * sc, img.height * sc);
-      }
+      g.globalAlpha = 0.96;
+      this._drawFlagOnSphere(g, img, lon, lat, flag.size, this.moving ? 8 : 16);
       g.restore();
     }
 
