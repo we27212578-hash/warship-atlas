@@ -53,13 +53,20 @@ export class Globe {
     const group = (geo, cfg, list) => {
       const names = new Set((list || []).filter(t => typeof t === 'string'));
       const geoms = geo.world.objects.countries.geometries.filter(g => names.has(g.properties.name) && String(g.id) !== String(cfg.isoNumeric));
-      const partials = (list || []).filter(t => typeof t === 'object').map(t => {
+      const partials = (list || []).filter(t => typeof t === 'object' && t.clip).map(t => {
         const ring = t.clip.concat([t.clip[0]]);
         let clip = { type: 'Polygon', coordinates: [ring] };
         if (d3.geoArea(clip) > 2 * Math.PI) clip = { type: 'Polygon', coordinates: [ring.slice().reverse()] };   // d3 要求順時針
         return { feature: geo.byName.get(t.name), clip };
       }).filter(p => p.feature);
-      return { ext: geoms.length ? topojson.merge(geo.world, geoms) : null, partials };
+      // outline：只畫外框的海域範圍（例如由許多小島組成的託管地）
+      const outlines = (list || []).filter(t => typeof t === 'object' && t.outline).map(t => {
+        const ring = t.outline.concat([t.outline[0]]);
+        let poly = { type: 'Polygon', coordinates: [ring] };
+        if (d3.geoArea(poly) > 2 * Math.PI) poly = { type: 'Polygon', coordinates: [ring.slice().reverse()] };
+        return poly;
+      });
+      return { ext: geoms.length ? topojson.merge(geo.world, geoms) : null, partials, outlines };
     };
     // territoryCore：與本土同樣濃度；territory：較淡（除非 territoryStyle 為 solid）
     const territory = (geo, cfg) => ({ solid: group(geo, cfg, cfg.territoryCore), dim: group(geo, cfg, cfg.territory) });
@@ -424,6 +431,11 @@ export class Globe {
     g.beginPath(); path(core);
     for (const grp of [ter.solid, ter.dim]) if (grp.ext) path(grp.ext);
     g.stroke();
+    for (const grp of [ter.solid, ter.dim]) for (const o of grp.outlines) {
+      g.beginPath(); path(o);
+      g.fillStyle = field; g.globalAlpha = 0.07; g.fill();
+      g.globalAlpha = 1; g.setLineDash([7, 5]); g.stroke(); g.setLineDash([]);
+    }
     g.shadowBlur = 6;
     for (const grp of [ter.solid, ter.dim]) for (const p of grp.partials) {   // 手繪範圍：國界與手繪線各畫一次
       g.save(); g.beginPath(); path(p.clip); g.clip(); g.beginPath(); path(p.feature); g.stroke(); g.restore();
