@@ -1,5 +1,6 @@
-// 畫面流程：首頁 → 國家 → 艦級 → 單艦 → 事件。
+// 畫面流程：首頁 → 國家 → 艦種 → 艦級 → 單艦 → 事件。
 // 目前位置完全由網址的 # 決定，例如 #/japan/yamato-class/yamato/leyte-gulf。
+// 艦種選單的網址是 #/japan/type-battleship；艦級以下的網址不含艦種，舊連結因此不受影響。
 // ESC 就是把網址往上退一層。這個檔案不放任何船艦內容，內容都在 data/ 裡。
 // 版本號（index.html 裡 app.js?v=N 的 N）一路傳給其他模組，避免瀏覽器沿用舊的快取
 const VERSION = new URL(import.meta.url).search;
@@ -11,6 +12,13 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const TYPE_LABEL = { origin: '建造背景', battle: '作戰經歷', event: '重要事件', fate: '最終結局' };
+// 艦種在網址中的代號與英文標籤。資料裡出現這張表以外的艦種時，直接用艦種名稱當代號。
+const SHIP_TYPES = {
+  '戰艦': ['battleship', 'BATTLESHIPS'], '戰鬥巡洋艦': ['battlecruiser', 'BATTLECRUISERS'],
+  '航空母艦': ['carrier', 'AIRCRAFT CARRIERS'], '重巡洋艦': ['heavy-cruiser', 'HEAVY CRUISERS'],
+  '輕巡洋艦': ['light-cruiser', 'LIGHT CRUISERS'], '鐵甲艦': ['ironclad', 'IRONCLADS'],
+  '其他大型艦艇': ['other', 'OTHER VESSELS']
+};
 const HOME_VIEW = { lon: 135, lat: 28, zoom: 1 };
 
 const el = {
@@ -42,14 +50,32 @@ function parseHash() {
   return { country, cls, ship, event };
 }
 function go(...parts) { location.hash = '#/' + parts.filter(Boolean).join('/'); }
+// 艦級頁的上一層是艦種選單，但艦種不在艦級的網址裡，所以由 route() 記下該退回哪裡
+let upPath = null;
 function goUp() {
+  if (upPath) return go(...upPath);
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (!parts.length) return;
   parts.pop();
   go(...parts);
 }
 
+// 依艦級在資料中出現的順序，把艦級分到各艦種
+function groupTypes(classes) {
+  const types = [];
+  for (const c of classes) {
+    let t = types.find(k => k.name === c.type);
+    if (!t) {
+      const [slug, en] = SHIP_TYPES[c.type] || [c.type, ''];
+      types.push(t = { name: c.type, slug, en, classes: [] });
+    }
+    t.classes.push(c);
+  }
+  return types;
+}
+
 async function route() {
+  upPath = null;
   const r = parseHash();
   const country = countries.find(c => c.id === r.country);
   if (!country) return renderHome();
@@ -58,6 +84,13 @@ async function route() {
   const cls = classes.find(c => c && c.id === r.cls);
   const ship = cls && cls.ships.find(s => s.id === r.ship);
   const event = ship && (ship.events || []).find(e => e.id === r.event);
+
+  // 只有一種艦種的國家不顯示艦種選單，點進國家就直接列出艦級
+  const types = groupTypes(classes.filter(Boolean));
+  const multi = types.length > 1;
+  const typeSlug = !cls && r.cls && r.cls.startsWith('type-') ? decodeURIComponent(r.cls.slice(5)) : null;
+  const type = !multi ? null : cls ? types.find(t => t.name === cls.type) : types.find(t => t.slug === typeSlug);
+  if (cls && !ship && type) upPath = [country.id, 'type-' + type.slug];
 
   globe.selectedCountry = country.id;
   globe.selectedAlpha = ship ? 0 : 0.55;   // 看單艦時收起國旗，避免蓋住事件標記
@@ -68,7 +101,7 @@ async function route() {
   el.back.hidden = false;
   el.hint.textContent = '拖曳轉動地球 · 滾輪縮放';
 
-  renderCrumb(country, cls, ship, event);
+  renderCrumb(country, type, cls, ship, event);
 
   if (ship) {
     renderShip(country, cls, ship, event);
@@ -79,7 +112,9 @@ async function route() {
   } else {
     globe.setMarkers([]);
     el.right.hidden = true;
-    if (cls) renderClass(country, cls); else renderCountry(country, classes.filter(Boolean));
+    if (cls) renderClass(country, cls);
+    else if (multi && !type) renderTypes(country, types);
+    else renderCountry(country, type ? type.classes : classes.filter(Boolean), type);
     globe.flyTo(country.focus);
   }
   layout();
@@ -115,8 +150,9 @@ function renderHome() {
   layout();
 }
 
-function renderCrumb(country, cls, ship, event) {
+function renderCrumb(country, type, cls, ship, event) {
   const items = [['', '全球'], [country.id, country.name]];
+  if (type) items.push([`${country.id}/type-${type.slug}`, type.name]);
   if (cls) items.push([`${country.id}/${cls.id}`, cls.name]);
   if (ship) items.push([`${country.id}/${cls.id}/${ship.id}`, ship.name]);
   if (event) items.push([null, event.title]);
@@ -129,19 +165,40 @@ function setLeft(html) {
   hydrate(el.left, openLightbox);
 }
 
-function renderCountry(country, classes) {
+function countryHead(country) {
+  return `
+    <p class="eyebrow">${esc(country.nameEn)}</p>
+    <div class="country-head">
+      <img src="assets/flags/${esc(country.flag.file)}" alt="${esc(country.flag.name)}">
+      <div><h2>${esc(country.name)}</h2><div class="meta">${esc(country.navy)}<br>${esc(country.flag.name)}</div></div>
+    </div>`;
+}
+
+function renderTypes(country, types) {
+  setLeft(`
+    ${countryHead(country)}
+    <p>${esc(country.summary)}</p>
+    <h3>艦種 TYPES</h3>
+    <ul class="card-list">${types.map(t => `<li><button class="card" data-go="${esc(country.id)}/type-${esc(t.slug)}">
+      ${thumbHTML(t.classes[0].image)}
+      <div><strong>${esc(t.name)}</strong><span>${t.en ? esc(t.en) + ' · ' : ''}${t.classes.length} 個艦級 · ${t.classes.reduce((n, c) => n + c.ships.length, 0)} 艘</span></div>
+    </button></li>`).join('')}</ul>`);
+}
+
+function renderCountry(country, classes, type) {
   const cards = classes.length
     ? `<ul class="card-list">${classes.map(c => `<li><button class="card" data-go="${esc(country.id)}/${esc(c.id)}">
         ${thumbHTML(c.image)}
         <div><strong>${esc(c.name)}</strong><span>${esc(c.type)} · ${esc(c.years)} · ${c.ships.length} 艘</span></div>
       </button></li>`).join('')}</ul>`
     : `<div class="empty">此國家的艦級資料建置中。</div>`;
-  setLeft(`
-    <p class="eyebrow">${esc(country.nameEn)}</p>
-    <div class="country-head">
-      <img src="assets/flags/${esc(country.flag.file)}" alt="${esc(country.flag.name)}">
-      <div><h2>${esc(country.name)}</h2><div class="meta">${esc(country.navy)}<br>${esc(country.flag.name)}</div></div>
-    </div>
+  setLeft(type ? `
+    <p class="eyebrow">${esc(country.name)} · ${esc(country.navy)}</p>
+    <h2>${esc(type.name)}${type.en ? `<small>${esc(type.en)}</small>` : ''}</h2>
+    <div class="meta">${classes.length} 個艦級 · ${classes.reduce((n, c) => n + c.ships.length, 0)} 艘</div>
+    <h3>艦級 CLASSES</h3>
+    ${cards}` : `
+    ${countryHead(country)}
     <p>${esc(country.summary)}</p>
     <h3>艦級 CLASSES</h3>
     ${cards}`);
