@@ -484,7 +484,8 @@ export class Globe {
     }
     for (const grp of [ter.solid, ter.dim]) for (const l of grp.lines) {
       g.save(); g.beginPath(); path(l);
-      g.strokeStyle = field; g.lineWidth = 2.2; g.shadowColor = field; g.shadowBlur = 10; g.setLineDash([9, 6]); g.stroke();
+      const short = l.coordinates.length < 3;
+      g.strokeStyle = field; g.lineWidth = short ? 3.2 : 2.2; g.lineCap = 'round'; g.shadowColor = field; g.shadowBlur = 10; g.setLineDash(short ? [] : [9, 6]); g.stroke();
       g.restore();
     }
     g.shadowBlur = 6;
