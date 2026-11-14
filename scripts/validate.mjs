@@ -37,6 +37,7 @@ for (const c of countries) {
   }
   for (const t of [...(c.territory || []), ...(c.territoryCore || [])]) {
     if (typeof t === 'object' && t.outline) { if (!(Array.isArray(t.outline) && t.outline.length >= 3)) err(cw, 'territory 的 outline 需要至少 3 個點'); continue; }
+    if (typeof t === 'object' && t.line) { if (!(Array.isArray(t.line) && t.line.length >= 2)) err(cw, 'territory 的 line 需要至少 2 個點'); continue; }
     const name = typeof t === 'string' ? t : t.name;
     if (!mapNames.has(name)) err(cw, `territory 的 "${name}" 不在 vendor 世界地圖的國名中`);
     if (typeof t === 'object' && !(Array.isArray(t.clip) && t.clip.length >= 3)) err(cw, `territory 的 "${name}" 需要至少 3 個點的 clip`);

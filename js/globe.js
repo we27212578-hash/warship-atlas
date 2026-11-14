@@ -66,7 +66,9 @@ export class Globe {
         if (d3.geoArea(poly) > 2 * Math.PI) poly = { type: 'Polygon', coordinates: [ring.slice().reverse()] };
         return poly;
       });
-      return { ext: geoms.length ? topojson.merge(geo.world, geoms) : null, partials, outlines };
+      // line：不封閉的虛線（例如勢力範圍線）
+      const lines = (list || []).filter(t => typeof t === 'object' && t.line).map(t => ({ type: 'LineString', coordinates: t.line }));
+      return { ext: geoms.length ? topojson.merge(geo.world, geoms) : null, partials, outlines, lines };
     };
     // territoryCore：與本土同樣濃度；territory：較淡（除非 territoryStyle 為 solid）
     const territory = (geo, cfg) => ({ solid: group(geo, cfg, cfg.territoryCore), dim: group(geo, cfg, cfg.territory) });
@@ -435,6 +437,11 @@ export class Globe {
       g.beginPath(); path(o);
       g.fillStyle = field; g.globalAlpha = 0.07; g.fill();
       g.globalAlpha = 1; g.setLineDash([7, 5]); g.stroke(); g.setLineDash([]);
+    }
+    for (const grp of [ter.solid, ter.dim]) for (const l of grp.lines) {
+      g.save(); g.beginPath(); path(l);
+      g.strokeStyle = field; g.lineWidth = 2.2; g.shadowColor = field; g.shadowBlur = 10; g.setLineDash([9, 6]); g.stroke();
+      g.restore();
     }
     g.shadowBlur = 6;
     for (const grp of [ter.solid, ter.dim]) for (const p of grp.partials) {   // 手繪範圍：國界與手繪線各畫一次
