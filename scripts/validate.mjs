@@ -35,7 +35,7 @@ for (const c of countries) {
     if (c.flag.mode === 'emblem' && typeof c.flag.size !== 'number') err(cw, 'emblem 模式的 flag.size 是一個數字（徽記直徑，單位為度）');
     if (c.flag.mode === 'fill' && !(Array.isArray(c.flag.size) && c.flag.size.length === 2)) err(cw, 'fill 模式的 flag.size 是 [寬, 高]（單位為度）');
   }
-  for (const t of c.territory || []) {
+  for (const t of [...(c.territory || []), ...(c.territoryCore || [])]) {
     const name = typeof t === 'string' ? t : t.name;
     if (!mapNames.has(name)) err(cw, `territory 的 "${name}" 不在 vendor 世界地圖的國名中`);
     if (typeof t === 'object' && !(Array.isArray(t.clip) && t.clip.length >= 3)) err(cw, `territory 的 "${name}" 需要至少 3 個點的 clip`);

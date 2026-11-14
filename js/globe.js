@@ -50,10 +50,10 @@ export class Globe {
     });
     this.hi = prep(hi); this.lo = prep(lo);
     // 把「歷史領土」清單（現今國名）合併成一塊，另外處理只取一部分的國家
-    const territory = (geo, cfg) => {
-      const names = new Set((cfg.territory || []).filter(t => typeof t === 'string'));
+    const group = (geo, cfg, list) => {
+      const names = new Set((list || []).filter(t => typeof t === 'string'));
       const geoms = geo.world.objects.countries.geometries.filter(g => names.has(g.properties.name) && String(g.id) !== String(cfg.isoNumeric));
-      const partials = (cfg.territory || []).filter(t => typeof t === 'object').map(t => {
+      const partials = (list || []).filter(t => typeof t === 'object').map(t => {
         const ring = t.clip.concat([t.clip[0]]);
         let clip = { type: 'Polygon', coordinates: [ring] };
         if (d3.geoArea(clip) > 2 * Math.PI) clip = { type: 'Polygon', coordinates: [ring.slice().reverse()] };   // d3 要求順時針
@@ -61,6 +61,8 @@ export class Globe {
       }).filter(p => p.feature);
       return { ext: geoms.length ? topojson.merge(geo.world, geoms) : null, partials };
     };
+    // territoryCore：與本土同樣濃度；territory：較淡（除非 territoryStyle 為 solid）
+    const territory = (geo, cfg) => ({ solid: group(geo, cfg, cfg.territoryCore), dim: group(geo, cfg, cfg.territory) });
     const loadImg = (file, done) => { const img = new Image(); img.onload = () => done(img); img.src = `assets/flags/${file}`; };
     for (const cfg of countryConfigs) {
       const feature = this.hi.byId.get(String(cfg.isoNumeric));
@@ -386,13 +388,17 @@ export class Globe {
     g.save();
     g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
 
-    // 本土以外的歷史領土：國旗底色，稍微透明
-    g.fillStyle = field; g.globalAlpha = flag.territoryStyle === 'solid' ? 0.9 : 0.5;
-    if (ter.ext) { g.beginPath(); path(ter.ext); g.fill(); }
-    for (const p of ter.partials) {
-      g.save(); g.beginPath(); path(p.feature); g.clip();
-      g.beginPath(); path(p.clip); g.fill(); g.restore();
-    }
+    // 本土以外的歷史領土：國旗底色。核心領土與本土同濃度，其餘稍微透明
+    const fillGroup = (grp, alpha) => {
+      g.fillStyle = field; g.globalAlpha = alpha;
+      if (grp.ext) { g.beginPath(); path(grp.ext); g.fill(); }
+      for (const p of grp.partials) {
+        g.save(); g.beginPath(); path(p.feature); g.clip();
+        g.beginPath(); path(p.clip); g.fill(); g.restore();
+      }
+    };
+    fillGroup(ter.dim, flag.territoryStyle === 'solid' ? 0.9 : 0.5);
+    fillGroup(ter.solid, 0.9);
 
     // 本土
     g.globalAlpha = 0.9;
@@ -413,10 +419,16 @@ export class Globe {
 
     // 發光的外框
     g.globalAlpha = 1;
-    g.beginPath(); path(core); if (ter.ext) path(ter.ext);
     g.shadowColor = flag.glow || '#bfe4ff'; g.shadowBlur = 16;
-    g.strokeStyle = 'rgba(235,246,255,0.95)'; g.lineWidth = 1.3; g.stroke();
+    g.strokeStyle = 'rgba(235,246,255,0.95)'; g.lineWidth = 1.3;
+    g.beginPath(); path(core);
+    for (const grp of [ter.solid, ter.dim]) if (grp.ext) path(grp.ext);
     g.stroke();
+    g.shadowBlur = 6;
+    for (const grp of [ter.solid, ter.dim]) for (const p of grp.partials) {   // 手繪範圍：國界與手繪線各畫一次
+      g.save(); g.beginPath(); path(p.clip); g.clip(); g.beginPath(); path(p.feature); g.stroke(); g.restore();
+      g.save(); g.beginPath(); path(p.feature); g.clip(); g.beginPath(); path(p.clip); g.stroke(); g.restore();
+    }
     g.restore();
   }
 
