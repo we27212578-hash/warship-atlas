@@ -578,11 +578,17 @@ export class Globe {
       ctx.strokeStyle = 'rgba(160,215,255,0.6)'; ctx.lineWidth = 1.1; ctx.stroke();
       ctx.setLineDash([]);
     }
+    this._layoutMarkers();
     this.markers.forEach((m, i) => {
-      if (!this._visible(m.lon, m.lat)) { m._xy = null; return; }
-      const [x, y] = m._xy = this.projection([m.lon, m.lat]);
+      if (!m._xy) return;
+      const [x, y] = m._xy;
       const color = MARKER_COLORS[m.type] || MARKER_COLORS.event;
       const active = m.id === this.activeMarker, hover = this.hoverMarker && this.hoverMarker.id === m.id;
+      if (m._spread) {   // 被拉開的光點：用細線連回真正的位置
+        ctx.beginPath(); ctx.moveTo(m._true[0], m._true[1]); ctx.lineTo(x, y);
+        ctx.strokeStyle = hexA(color, 0.55); ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); ctx.arc(m._true[0], m._true[1], 2, 0, 7); ctx.fillStyle = hexA(color, 0.8); ctx.fill();
+      }
       const ph = ((t / 1600) + i * 0.27) % 1;
       ctx.beginPath(); ctx.arc(x, y, 6 + ph * 20, 0, 7);
       ctx.strokeStyle = hexA(color, (1 - ph) * 0.7); ctx.lineWidth = 1.2; ctx.stroke();
@@ -595,22 +601,66 @@ export class Globe {
     });
   }
 
+  // 同一地點附近的事件在螢幕上會疊在一起（例如喀琅施塔得的兩次事件只差幾公里），
+  // 所以把螢幕上距離太近的光點以圓形排開，光點本身仍用細線指回真正的位置。
+  _layoutMarkers() {
+    const GAP = 26;
+    const vis = [];
+    for (const m of this.markers) {
+      m._spread = false; m._left = false;
+      if (!this._visible(m.lon, m.lat)) { m._xy = m._true = null; continue; }
+      m._true = this.projection([m.lon, m.lat]); m._xy = m._true.slice(); vis.push(m);
+    }
+    const seen = new Set();
+    for (const m of vis) {
+      if (seen.has(m)) continue;
+      const group = [m]; seen.add(m);
+      for (let k = 0; k < group.length; k++) for (const o of vis) {
+        if (seen.has(o)) continue;
+        if (Math.hypot(o._true[0] - group[k]._true[0], o._true[1] - group[k]._true[1]) < GAP) { group.push(o); seen.add(o); }
+      }
+      if (group.length < 2) continue;
+      const cx = group.reduce((v, g) => v + g._true[0], 0) / group.length;
+      const cy = group.reduce((v, g) => v + g._true[1], 0) / group.length;
+      const r = Math.max(GAP, GAP * group.length / (2 * Math.sin(Math.PI / group.length)) / 1.6);
+      group.forEach((g, i) => {
+        const ang = -Math.PI / 2 + i * 2 * Math.PI / group.length;   // 第一個放正上方，依事件順序順時針
+        g._xy = [cx + r * Math.cos(ang), cy + r * Math.sin(ang)]; g._spread = true;
+        g._left = Math.cos(ang) < -0.3;   // 排在左側的光點，標籤也放左邊，才不會和右側的標籤擠在一起
+      });
+    }
+  }
+
   _drawMarkerLabels() {
     const { ctx } = this;
     ctx.font = '12px "Noto Sans TC","Microsoft JhengHei",sans-serif';
     ctx.textBaseline = 'middle';
-    this.markers.forEach((m, i) => {
-      if (!m._xy) return;
-      const [x, y] = m._xy;
+    const placed = [];
+    const order = this.markers.map((m, i) => [m, i]).filter(([m]) => m._xy).sort((p, q) => p[0]._xy[1] - q[0]._xy[1]);
+    for (const [m, i] of order) {
+      const [x, y0] = m._xy;
       const label = `${i + 1}  ${m.label}`;
       const tw = ctx.measureText(label).width;
+      const box = { x: m._left ? x - 24 - tw : x + 12, w: tw + 12, h: 20, y: y0 - 10 };
+      // 標籤彼此重疊時往下挪，直到不重疊為止
+      for (let guard = 0; guard < 20; guard++) {
+        const hit = placed.find(p => box.x < p.x + p.w && p.x < box.x + box.w && box.y < p.y + p.h + 2 && p.y < box.y + box.h + 2);
+        if (!hit) break;
+        box.y = hit.y + hit.h + 3;
+      }
+      placed.push(box);
+      const color = MARKER_COLORS[m.type] || '#9db4ff';
+      if (Math.abs(box.y + 10 - y0) > 1) {   // 標籤被挪開時，畫一條細線接回光點
+        ctx.beginPath(); ctx.moveTo(x + (m._left ? -6 : 6), y0); ctx.lineTo(m._left ? box.x + box.w : box.x, box.y + 10);
+        ctx.strokeStyle = hexA(color, 0.5); ctx.lineWidth = 1; ctx.stroke();
+      }
       ctx.fillStyle = 'rgba(2,12,26,0.82)';
-      ctx.fillRect(x + 12, y - 10, tw + 12, 20);
-      ctx.strokeStyle = hexA(MARKER_COLORS[m.type] || '#9db4ff', 0.7); ctx.lineWidth = 1;
-      ctx.strokeRect(x + 12.5, y - 9.5, tw + 11, 19);
+      ctx.fillRect(box.x, box.y, box.w, box.h);
+      ctx.strokeStyle = hexA(color, 0.7); ctx.lineWidth = 1;
+      ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.w - 1, box.h - 1);
       ctx.fillStyle = '#e4f2ff';
-      ctx.fillText(label, x + 18, y + 0.5);
-    });
+      ctx.fillText(label, box.x + 6, box.y + 10.5);
+    }
   }
 }
 
