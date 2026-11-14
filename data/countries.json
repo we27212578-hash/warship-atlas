@@ -1,0 +1,92 @@
+{
+  "countries": [
+    {
+      "id": "japan",
+      "isoNumeric": "392",
+      "name": "日本",
+      "nameEn": "Empire of Japan",
+      "navy": "大日本帝國海軍",
+      "flag": { "file": "japan.svg", "name": "日章旗（1870–1999 年樣式）", "center": [138, 37], "width": 15 },
+      "focus": { "lon": 137, "lat": 35, "zoom": 2.2 },
+      "summary": "日本海軍在二十世紀前半從甲午、日俄戰爭一路擴張，至太平洋戰爭開戰時已是世界第三大海軍，並建造了史上最大的戰艦大和級。",
+      "classes": ["yamato-class"]
+    },
+    {
+      "id": "usa",
+      "isoNumeric": "840",
+      "name": "美國",
+      "nameEn": "United States",
+      "navy": "美國海軍",
+      "flag": { "file": "usa.svg", "name": "48 星星條旗（1912–1959）", "center": [-98, 39], "width": 52 },
+      "focus": { "lon": -97, "lat": 38, "zoom": 1.5 },
+      "summary": "美國海軍在二戰期間憑藉龐大的工業產能，建成人類史上規模最大的艦隊，並在太平洋與大西洋兩面作戰。",
+      "classes": ["iowa-class"]
+    },
+    {
+      "id": "germany",
+      "isoNumeric": "276",
+      "name": "德國",
+      "nameEn": "Germany",
+      "navy": "德國戰爭海軍（Kriegsmarine）",
+      "flag": { "file": "germany.svg", "name": "1935–1945 年國旗（依史實呈現，僅供歷史教育用途）", "center": [10.3, 51.1], "width": 10 },
+      "focus": { "lon": 10, "lat": 51, "zoom": 3.2 },
+      "summary": "受凡爾賽條約限制的德國海軍在 1930 年代重新武裝，水面艦隊規模雖小，卻以俾斯麥級等大型戰艦牽制了大量英國兵力。",
+      "classes": ["bismarck-class"]
+    },
+    {
+      "id": "uk",
+      "isoNumeric": "826",
+      "name": "英國",
+      "nameEn": "United Kingdom",
+      "navy": "皇家海軍",
+      "flag": { "file": "uk.svg", "name": "聯合旗", "center": [-2.5, 54.3], "width": 11 },
+      "focus": { "lon": -3, "lat": 54.5, "zoom": 3.2 },
+      "summary": "皇家海軍長期是世界第一大海軍，兩次世界大戰中負責維繫橫跨全球的海上交通線。",
+      "classes": ["admiral-class"]
+    },
+    {
+      "id": "france",
+      "isoNumeric": "250",
+      "name": "法國",
+      "nameEn": "France",
+      "navy": "法國海軍（Marine nationale）",
+      "flag": { "file": "france.svg", "name": "三色旗", "center": [2.5, 46.6], "width": 12 },
+      "focus": { "lon": 2.5, "lat": 46.5, "zoom": 3.2 },
+      "summary": "法國海軍在 1930 年代建造了設計新穎的敦克爾克級與黎胥留級戰艦；1940 年法國戰敗後，艦隊的歸屬成為各方角力的焦點。",
+      "classes": ["richelieu-class"]
+    },
+    {
+      "id": "russia",
+      "isoNumeric": "643",
+      "name": "俄國／蘇聯",
+      "nameEn": "Russia / Soviet Union",
+      "navy": "俄羅斯帝國海軍、蘇聯海軍",
+      "flag": { "file": "ussr.svg", "name": "蘇聯國旗（簡化繪製）", "center": [44, 57], "width": 46 },
+      "focus": { "lon": 40, "lat": 58, "zoom": 1.7 },
+      "summary": "俄國海軍在日俄戰爭後重建，建造了甘古特級無畏艦；這批戰艦後來由蘇聯海軍接收，一路服役到第二次世界大戰。",
+      "classes": ["gangut-class"]
+    },
+    {
+      "id": "italy",
+      "isoNumeric": "380",
+      "name": "義大利",
+      "nameEn": "Kingdom of Italy",
+      "navy": "義大利皇家海軍（Regia Marina）",
+      "flag": { "file": "italy.svg", "name": "義大利王國國旗（1861–1946，簡化繪製）", "center": [12.4, 42.6], "width": 11 },
+      "focus": { "lon": 12.5, "lat": 42.5, "zoom": 3.2 },
+      "summary": "義大利皇家海軍是地中海的主要海軍力量之一，擁有高速的現代化戰艦，但長期受燃油短缺與缺乏航空母艦所限。",
+      "classes": ["littorio-class"]
+    },
+    {
+      "id": "china",
+      "isoNumeric": "156",
+      "name": "中國",
+      "nameEn": "Republic of China",
+      "navy": "中華民國海軍",
+      "flag": { "file": "roc.svg", "name": "青天白日滿地紅旗", "center": [104, 35], "width": 44 },
+      "focus": { "lon": 110, "lat": 33, "zoom": 1.8 },
+      "summary": "甲午戰爭後中國海軍元氣大傷。1930 年代國民政府嘗試重建艦隊，寧海級輕巡洋艦是當時最新銳的主力軍艦。",
+      "classes": ["ning-hai-class"]
+    }
+  ]
+}

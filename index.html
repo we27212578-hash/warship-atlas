@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全球戰艦史料室 | Global Warship Atlas</title>
+<meta name="description" content="在情報室風格的 3D 地球上，瀏覽 1945 年以前各國大型艦艇的艦級、單艦與作戰經歷。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="globe" aria-label="可轉動的全球戰略地圖"></canvas>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<header class="hud-top">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div>
+      <h1>全球戰艦史料室</h1>
+      <p>GLOBAL WARSHIP ATLAS · 至 1945</p>
+    </div>
+  </div>
+  <nav id="breadcrumb" class="breadcrumb" aria-label="目前位置"></nav>
+</header>
+
+<aside id="panel-left" class="panel panel-left" hidden></aside>
+<aside id="panel-right" class="panel panel-right" hidden></aside>
+
+<div id="home-list" class="home-list"></div>
+
+<footer class="hud-bottom">
+  <button id="btn-back" class="btn-back" hidden><kbd>ESC</kbd> 回到上一步</button>
+  <span class="hint">拖曳轉動地球 · 滾輪縮放 · 點擊發光的國家</span>
+  <div class="zoom">
+    <button id="btn-zoom-in" aria-label="放大">＋</button>
+    <button id="btn-zoom-out" aria-label="縮小">－</button>
+  </div>
+</footer>
+
+<div id="tooltip" class="tooltip" hidden></div>
+
+<div id="lightbox" class="lightbox" hidden>
+  <figure>
+    <img id="lightbox-img" alt="">
+    <figcaption id="lightbox-cap"></figcaption>
+  </figure>
+</div>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
