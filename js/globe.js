@@ -42,19 +42,37 @@ export class Globe {
   async load(hiUrl, loUrl, countryConfigs) {
     const [hi, lo] = await Promise.all([hiUrl, loUrl].map(u => fetch(u).then(r => r.json())));
     const prep = world => ({
+      world,
       land: topojson.merge(world, world.objects.countries.geometries),
       borders: topojson.mesh(world, world.objects.countries, (a, b) => a !== b),
-      byId: new Map(topojson.feature(world, world.objects.countries).features.map(f => [String(f.id), f]))
+      byId: new Map(topojson.feature(world, world.objects.countries).features.map(f => [String(f.id), f])),
+      byName: new Map(topojson.feature(world, world.objects.countries).features.map(f => [f.properties.name, f]))
     });
     this.hi = prep(hi); this.lo = prep(lo);
+    // 把「歷史領土」清單（現今國名）合併成一塊，另外處理只取一部分的國家
+    const territory = (geo, cfg) => {
+      const names = new Set((cfg.territory || []).filter(t => typeof t === 'string'));
+      const geoms = geo.world.objects.countries.geometries.filter(g => names.has(g.properties.name) && String(g.id) !== String(cfg.isoNumeric));
+      const partials = (cfg.territory || []).filter(t => typeof t === 'object').map(t => {
+        const ring = t.clip.concat([t.clip[0]]);
+        let clip = { type: 'Polygon', coordinates: [ring] };
+        if (d3.geoArea(clip) > 2 * Math.PI) clip = { type: 'Polygon', coordinates: [ring.slice().reverse()] };   // d3 要求順時針
+        return { feature: geo.byName.get(t.name), clip };
+      }).filter(p => p.feature);
+      return { ext: geoms.length ? topojson.merge(geo.world, geoms) : null, partials };
+    };
+    const loadImg = (file, done) => { const img = new Image(); img.onload = () => done(img); img.src = `assets/flags/${file}`; };
     for (const cfg of countryConfigs) {
       const feature = this.hi.byId.get(String(cfg.isoNumeric));
       if (!feature) { console.warn('找不到國家邊界', cfg.id, cfg.isoNumeric); continue; }
-      const entry = { cfg, feature, featureLo: this.lo.byId.get(String(cfg.isoNumeric)) || feature, flagImg: null, halo: null, alpha: 0 };
+      const entry = {
+        cfg, feature, featureLo: this.lo.byId.get(String(cfg.isoNumeric)) || feature,
+        terHi: territory(this.hi, cfg), terLo: territory(this.lo, cfg),
+        flagImg: null, emblemImg: null, layer: null, layerKey: '', alpha: 0
+      };
       this.countries.set(cfg.id, entry);
-      const img = new Image();
-      img.onload = () => { entry.flagImg = img; entry.halo = makeHalo(img); };
-      img.src = `assets/flags/${cfg.flag.file}`;
+      loadImg(cfg.flag.file, img => { entry.flagImg = img; entry.layerKey = ''; });
+      if (cfg.flag.emblem) loadImg(cfg.flag.emblem, img => { entry.emblemImg = img; });
     }
     const all = [...this.countries.values()];
     this.hi.active = { type: 'FeatureCollection', features: all.map(e => e.feature) };
@@ -238,11 +256,12 @@ export class Globe {
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.clip();
 
-    // 國旗光暈
+    // 國旗：懸停或選取中的國家
     for (const [id, entry] of this.countries) {
       const targetA = id === this.hoverCountry ? 1 : (id === this.selectedCountry ? this.selectedAlpha : 0);
       entry.alpha += (targetA - entry.alpha) * 0.09;
-      if (entry.alpha > 0.01) this._drawFlag(entry);
+      if (entry.alpha > 0.01) this._drawFlag(entry, t);
+      else if (entry.layer) { entry.layer.width = entry.layer.height = 0; entry.layer = null; entry.layerKey = ''; }   // 釋放記憶體
     }
 
     // 事件航跡與標記
@@ -316,39 +335,110 @@ export class Globe {
     return d3.geoDistance([lon, lat], c) < Math.PI / 2 - 0.02;
   }
 
-  _drawFlag(entry) {
-    const { ctx } = this;
-    const { flag } = entry.cfg;
-    const img = entry.flagImg;
-    if (!img) return;
-    const [lon, lat] = flag.center;
-    if (!this._visible(lon, lat)) return;
-    const [x, y] = this.projection([lon, lat]);
-    const fw = flag.width * RAD * this.radius;
-    const fh = fw * img.height / img.width;
-    const a = entry.alpha;
-    const shape = this.moving ? entry.featureLo : entry.feature;
+  // 國旗分兩種畫法（由 countries.json 的 flag.mode 決定）：
+  //   emblem：整片領土塗上國旗底色，中央放徽記，徽記向外放射光芒
+  //   fill  ：整面國旗置中鋪滿本土，其餘領土塗上代表色
+  // 領土的填色比較耗時，所以畫在各國自己的快取圖層上，視角不變就不重畫。
+  _drawFlag(entry, t) {
+    const { ctx, dpr } = this;
+    const flag = entry.cfg.flag, a = entry.alpha;
+    const key = `${this._viewKey}|${this.moving ? 'lo' : 'hi'}|${!!entry.flagImg}`;
+    if (entry.layerKey !== key) { this._renderFlagLayer(entry); entry.layerKey = key; }
 
-    // 1) 向外暈開的光：模糊後的國旗，愈外圍愈淡
-    if (entry.halo) {
-      const s = Math.max(fw * 2.6, 190);
+    const [lon, lat] = flag.center;
+    const shown = this._visible(lon, lat);
+    const [x, y] = shown ? this.projection([lon, lat]) : [0, 0];
+    const k = RAD * this.radius;
+    const size = Array.isArray(flag.size) ? flag.size : [flag.size, flag.size];
+    const glow = flag.glow || '#ffffff';
+    const layer = () => {
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a;
+      ctx.drawImage(entry.layer, 0, 0); ctx.restore();
+    };
+
+    if (flag.mode === 'emblem') {
+      layer();
+      if (!shown || !entry.emblemImg) return;
+      const r = Math.max(size[0] * k / 2, 16);
+      this._drawRays(x, y, r * 1.08, r * 2.1, glow, a, t, 24);
       ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = 0.95 * a;
-      ctx.drawImage(entry.halo, x - s / 2, y - s / 2, s, s);
+      ctx.globalAlpha = a;
+      ctx.shadowColor = glow; ctx.shadowBlur = 10 + 6 * Math.sin(t / 600);
+      ctx.drawImage(entry.emblemImg, x - r, y - r, r * 2, r * 2);
       ctx.restore();
+    } else {
+      if (shown) { const r = Math.max(Math.min(size[0], size[1]) * k / 2, 14); this._drawRays(x, y, r * 0.9, r * 2.3, glow, a * 0.8, t, 32); }
+      layer();
     }
-    // 2) 領土內：清楚的國旗
+  }
+
+  _renderFlagLayer(entry) {
+    const { w, h, dpr } = this, R = this.radius, [cx, cy] = this.center;
+    if (!entry.layer) entry.layer = document.createElement('canvas');
+    const c = entry.layer;
+    if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; }
+    const g = c.getContext('2d'), path = d3.geoPath(this.projection, g);
+    const flag = entry.cfg.flag, field = flag.field || '#2f9bff';
+    const core = this.moving ? entry.featureLo : entry.feature;
+    const ter = this.moving ? entry.terLo : entry.terHi;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.save();
+    g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
+
+    // 本土以外的歷史領土：國旗底色，稍微透明
+    g.fillStyle = field; g.globalAlpha = flag.territoryStyle === 'solid' ? 0.9 : 0.5;
+    if (ter.ext) { g.beginPath(); path(ter.ext); g.fill(); }
+    for (const p of ter.partials) {
+      g.save(); g.beginPath(); path(p.feature); g.clip();
+      g.beginPath(); path(p.clip); g.fill(); g.restore();
+    }
+
+    // 本土
+    g.globalAlpha = 0.9;
+    if (flag.mode === 'emblem' || !entry.flagImg) { g.beginPath(); path(core); g.fill(); }
+    else {
+      const img = entry.flagImg, [lon, lat] = flag.center;
+      g.save(); g.beginPath(); path(core); g.clip();
+      g.fillRect(cx - R, cy - R, R * 2, R * 2);   // 國旗蓋不到的離島先墊底色
+      if (this._visible(lon, lat)) {
+        const [x, y] = this.projection([lon, lat]);
+        const bw = flag.size[0] * RAD * R, bh = flag.size[1] * RAD * R;
+        const sc = Math.max(bw / img.width, bh / img.height);   // 等比例放大到蓋滿
+        g.globalAlpha = 0.96;
+        g.drawImage(img, x - img.width * sc / 2, y - img.height * sc / 2, img.width * sc, img.height * sc);
+      }
+      g.restore();
+    }
+
+    // 發光的外框
+    g.globalAlpha = 1;
+    g.beginPath(); path(core); if (ter.ext) path(ter.ext);
+    g.shadowColor = flag.glow || '#bfe4ff'; g.shadowBlur = 16;
+    g.strokeStyle = 'rgba(235,246,255,0.95)'; g.lineWidth = 1.3; g.stroke();
+    g.stroke();
+    g.restore();
+  }
+
+  // 從 (x, y) 向外放射的光芒：長短相間、緩慢轉動，邊緣清楚而不是糊成一片
+  _drawRays(x, y, r0, r1, color, alpha, t, n) {
+    const { ctx } = this;
+    const pulse = 0.92 + 0.08 * Math.sin(t / 500);
     ctx.save();
-    ctx.beginPath(); this.path(shape); ctx.clip();
-    ctx.globalAlpha = 0.92 * a;
-    ctx.drawImage(img, x - fw / 2, y - fh / 2, fw, fh);
-    ctx.restore();
-    // 3) 發光的國界
-    ctx.save();
-    ctx.beginPath(); this.path(shape);
-    ctx.shadowColor = '#bfe4ff'; ctx.shadowBlur = 14;
-    ctx.strokeStyle = `rgba(225,242,255,${0.95 * a})`; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.translate(x, y); ctx.rotate(t / 14000);
+    const half = r0 * Math.sin(Math.PI / n) * 0.55;
+    for (const long of [true, false]) {
+      const len = (r1 - r0) * (long ? 1 : 0.6) * pulse;
+      const grad = ctx.createLinearGradient(r0, 0, r0 + len, 0);
+      grad.addColorStop(0, hexA(color, 0.85 * alpha)); grad.addColorStop(1, hexA(color, 0));
+      ctx.fillStyle = grad;
+      for (let i = long ? 0 : 1; i < n; i += 2) {
+        ctx.save(); ctx.rotate(i * 2 * Math.PI / n);
+        ctx.beginPath(); ctx.moveTo(r0, -half); ctx.lineTo(r0 + len, 0); ctx.lineTo(r0, half); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    }
     ctx.restore();
   }
 
@@ -394,22 +484,6 @@ export class Globe {
       ctx.fillText(label, x + 18, y + 0.5);
     });
   }
-}
-
-// 把國旗做成一張「模糊且向外淡出」的貼圖，懸停時疊在地球上當光暈。
-function makeHalo(img) {
-  const S = 512;
-  const c = document.createElement('canvas'); c.width = c.height = S;
-  const g = c.getContext('2d');
-  const fw = S / 2.6 * 1.25, fh = fw * img.height / img.width;
-  try { g.filter = 'blur(22px)'; } catch (e) { /* 舊版瀏覽器沒有 filter 就不模糊 */ }
-  g.drawImage(img, (S - fw) / 2, (S - fh) / 2, fw, fh);
-  g.filter = 'none';
-  g.globalCompositeOperation = 'destination-in';
-  const grad = g.createRadialGradient(S / 2, S / 2, S * 0.08, S / 2, S / 2, S / 2);
-  grad.addColorStop(0, 'rgba(0,0,0,1)'); grad.addColorStop(0.45, 'rgba(0,0,0,0.55)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = grad; g.fillRect(0, 0, S, S);
-  return c;
 }
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }

@@ -230,7 +230,7 @@ globe.on('hover', ({ country, marker, x, y }) => {
   if (marker) el.tip.innerHTML = `<b>${esc(marker.label)}</b>${esc(TYPE_LABEL[marker.type] || '')} · ${esc(marker.date || '')}`;
   else if (country) {
     const c = countries.find(k => k.id === country);
-    el.tip.innerHTML = `<b>${esc(c.name)}</b>${esc(c.navy)}<br>點擊進入`;
+    el.tip.innerHTML = `<b>${esc(c.name)}</b>${esc(c.navy)}${c.territoryNote ? `<br>顯示範圍：${esc(c.territoryNote)}` : ''}<br>點擊進入`;
   } else { el.tip.hidden = true; return; }
   el.tip.hidden = false; el.tip.style.left = x + 'px'; el.tip.style.top = y + 'px';
 });

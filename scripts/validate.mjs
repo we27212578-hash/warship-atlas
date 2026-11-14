@@ -18,6 +18,7 @@ const checkImage = (img, where) => {
 };
 
 const { countries } = JSON.parse(readFileSync(join(root, 'data/countries.json'), 'utf8'));
+const mapNames = new Set(JSON.parse(readFileSync(join(root, 'vendor/countries-50m.json'), 'utf8')).objects.countries.geometries.map(g => g.properties.name));
 const seenCountry = new Set();
 let nClass = 0, nShip = 0, nEvent = 0;
 
@@ -27,6 +28,19 @@ for (const c of countries) {
   if (!ID.test(c.id || '')) err(cw, 'id 只能用小寫英數與連字號');
   if (seenCountry.has(c.id)) err(cw, 'id 重複'); seenCountry.add(c.id);
   if (c.flag && !existsSync(join(root, 'assets/flags', c.flag.file || ''))) err(cw, `找不到國旗檔 assets/flags/${c.flag && c.flag.file}`);
+  if (c.flag) {
+    need(c.flag, ['file', 'name', 'mode', 'field', 'center', 'size'], `${cw} › flag`);
+    if (!['emblem', 'fill'].includes(c.flag.mode)) err(cw, 'flag.mode 必須是 emblem 或 fill');
+    if (c.flag.mode === 'emblem' && !existsSync(join(root, 'assets/flags', c.flag.emblem || '-'))) err(cw, 'emblem 模式必須有 flag.emblem，且檔案要存在於 assets/flags/');
+    if (c.flag.mode === 'emblem' && typeof c.flag.size !== 'number') err(cw, 'emblem 模式的 flag.size 是一個數字（徽記直徑，單位為度）');
+    if (c.flag.mode === 'fill' && !(Array.isArray(c.flag.size) && c.flag.size.length === 2)) err(cw, 'fill 模式的 flag.size 是 [寬, 高]（單位為度）');
+  }
+  for (const t of c.territory || []) {
+    const name = typeof t === 'string' ? t : t.name;
+    if (!mapNames.has(name)) err(cw, `territory 的 "${name}" 不在 vendor 世界地圖的國名中`);
+    if (typeof t === 'object' && !(Array.isArray(t.clip) && t.clip.length >= 3)) err(cw, `territory 的 "${name}" 需要至少 3 個點的 clip`);
+  }
+  if ((c.territory || []).length && !c.territoryNote) err(cw, '有 territory 就必須寫 territoryNote');
 
   for (const classId of c.classes || []) {
     const file = `data/${c.id}/${classId}.json`;

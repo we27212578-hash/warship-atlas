@@ -6,10 +6,36 @@
       "name": "日本",
       "nameEn": "Empire of Japan",
       "navy": "大日本帝國海軍",
-      "flag": { "file": "japan.svg", "name": "日章旗（1870–1999 年樣式）", "center": [138, 37], "width": 15 },
-      "focus": { "lon": 137, "lat": 35, "zoom": 2.2 },
+      "flag": {
+        "file": "japan-rising-sun.svg",
+        "name": "旭日旗",
+        "mode": "fill",
+        "field": "#bc002d",
+        "center": [
+          137.5,
+          37
+        ],
+        "size": [
+          15,
+          15
+        ],
+        "glow": "#ffd9d9"
+      },
+      "focus": {
+        "lon": 137,
+        "lat": 35,
+        "zoom": 2.2
+      },
       "summary": "日本海軍在二十世紀前半從甲午、日俄戰爭一路擴張，至太平洋戰爭開戰時已是世界第三大海軍，並建造了史上最大的戰艦大和級。",
-      "classes": ["yamato-class"]
+      "classes": [
+        "yamato-class"
+      ],
+      "territory": [
+        "North Korea",
+        "South Korea",
+        "Taiwan"
+      ],
+      "territoryNote": "1945 年以前的日本本土、朝鮮與臺灣"
     },
     {
       "id": "usa",
@@ -17,10 +43,36 @@
       "name": "美國",
       "nameEn": "United States",
       "navy": "美國海軍",
-      "flag": { "file": "usa.svg", "name": "48 星星條旗（1912–1959）", "center": [-98, 39], "width": 52 },
-      "focus": { "lon": -97, "lat": 38, "zoom": 1.5 },
+      "flag": {
+        "file": "usa.svg",
+        "name": "48 星星條旗（1912–1959）",
+        "mode": "fill",
+        "field": "#b22234",
+        "center": [
+          -97,
+          38.5
+        ],
+        "size": [
+          47,
+          25
+        ],
+        "glow": "#ffffff"
+      },
+      "focus": {
+        "lon": -97,
+        "lat": 38,
+        "zoom": 1.5
+      },
       "summary": "美國海軍在二戰期間憑藉龐大的工業產能，建成人類史上規模最大的艦隊，並在太平洋與大西洋兩面作戰。",
-      "classes": ["iowa-class"]
+      "classes": [
+        "iowa-class"
+      ],
+      "territory": [
+        "Philippines",
+        "Puerto Rico",
+        "Guam"
+      ],
+      "territoryNote": "美國本土及菲律賓等海外屬地"
     },
     {
       "id": "germany",
@@ -28,10 +80,145 @@
       "name": "德國",
       "nameEn": "Germany",
       "navy": "德國戰爭海軍（Kriegsmarine）",
-      "flag": { "file": "germany.svg", "name": "1935–1945 年國旗（依史實呈現，僅供歷史教育用途）", "center": [10.3, 51.1], "width": 10 },
-      "focus": { "lon": 10, "lat": 51, "zoom": 3.2 },
+      "flag": {
+        "file": "germany.svg",
+        "name": "1935–1945 年國旗（依史實呈現，僅供歷史教育用途）",
+        "mode": "emblem",
+        "field": "#da121a",
+        "emblem": "germany-emblem.svg",
+        "center": [
+          10.4,
+          51.1
+        ],
+        "size": 4.6,
+        "glow": "#ffffff"
+      },
+      "focus": {
+        "lon": 10,
+        "lat": 51,
+        "zoom": 3.2
+      },
       "summary": "受凡爾賽條約限制的德國海軍在 1930 年代重新武裝，水面艦隊規模雖小，卻以俾斯麥級等大型戰艦牽制了大量英國兵力。",
-      "classes": ["bismarck-class"]
+      "classes": [
+        "bismarck-class"
+      ],
+      "territory": [
+        "Austria",
+        "Czechia",
+        "Poland",
+        "Denmark",
+        "Norway",
+        "Netherlands",
+        "Belgium",
+        "Luxembourg",
+        "Estonia",
+        "Latvia",
+        "Lithuania",
+        "Belarus",
+        "Ukraine",
+        "Serbia",
+        "Greece",
+        {
+          "name": "France",
+          "clip": [
+            [
+              -6,
+              41
+            ],
+            [
+              10,
+              41
+            ],
+            [
+              10,
+              52
+            ],
+            [
+              -6,
+              52
+            ]
+          ]
+        },
+        {
+          "name": "Russia",
+          "clip": [
+            [
+              19,
+              54
+            ],
+            [
+              23.5,
+              54
+            ],
+            [
+              23.5,
+              55.6
+            ],
+            [
+              19,
+              55.6
+            ]
+          ]
+        },
+        {
+          "name": "Russia",
+          "clip": [
+            [
+              27,
+              60.5
+            ],
+            [
+              30.5,
+              59.8
+            ],
+            [
+              33,
+              57.5
+            ],
+            [
+              35,
+              56
+            ],
+            [
+              36,
+              53.5
+            ],
+            [
+              39.3,
+              51.7
+            ],
+            [
+              42,
+              50
+            ],
+            [
+              44.5,
+              48.7
+            ],
+            [
+              45.5,
+              46
+            ],
+            [
+              44.5,
+              43.3
+            ],
+            [
+              40,
+              43.2
+            ],
+            [
+              36,
+              44.5
+            ],
+            [
+              27,
+              44.5
+            ]
+          ]
+        }
+      ],
+      "territoryNote": "1942 年前後德國本土與佔領區的最大範圍（以現今國界近似）"
     },
     {
       "id": "uk",
@@ -39,10 +226,73 @@
       "name": "英國",
       "nameEn": "United Kingdom",
       "navy": "皇家海軍",
-      "flag": { "file": "uk.svg", "name": "聯合旗", "center": [-2.5, 54.3], "width": 11 },
-      "focus": { "lon": -3, "lat": 54.5, "zoom": 3.2 },
+      "flag": {
+        "file": "uk.svg",
+        "name": "聯合旗",
+        "mode": "fill",
+        "field": "#c8102e",
+        "center": [
+          -2.6,
+          54.6
+        ],
+        "size": [
+          9,
+          11
+        ],
+        "glow": "#ffffff"
+      },
+      "focus": {
+        "lon": -3,
+        "lat": 54.5,
+        "zoom": 3.2
+      },
       "summary": "皇家海軍長期是世界第一大海軍，兩次世界大戰中負責維繫橫跨全球的海上交通線。",
-      "classes": ["admiral-class"]
+      "classes": [
+        "admiral-class"
+      ],
+      "territory": [
+        "Canada",
+        "Australia",
+        "New Zealand",
+        "South Africa",
+        "India",
+        "Pakistan",
+        "Bangladesh",
+        "Myanmar",
+        "Sri Lanka",
+        "Malaysia",
+        "Singapore",
+        "Brunei",
+        "Hong Kong",
+        "Sudan",
+        "S. Sudan",
+        "Kenya",
+        "Uganda",
+        "Tanzania",
+        "Zambia",
+        "Zimbabwe",
+        "Malawi",
+        "Botswana",
+        "Lesotho",
+        "eSwatini",
+        "Nigeria",
+        "Ghana",
+        "Sierra Leone",
+        "Gambia",
+        "Somaliland",
+        "Iraq",
+        "Jordan",
+        "Israel",
+        "Palestine",
+        "Cyprus",
+        "Malta",
+        "Guyana",
+        "Belize",
+        "Jamaica",
+        "Papua New Guinea",
+        "Falkland Is."
+      ],
+      "territoryNote": "二戰前夕的大英帝國（含自治領、殖民地與託管地）"
     },
     {
       "id": "france",
@@ -50,10 +300,58 @@
       "name": "法國",
       "nameEn": "France",
       "navy": "法國海軍（Marine nationale）",
-      "flag": { "file": "france.svg", "name": "三色旗", "center": [2.5, 46.6], "width": 12 },
-      "focus": { "lon": 2.5, "lat": 46.5, "zoom": 3.2 },
+      "flag": {
+        "file": "france.svg",
+        "name": "三色旗",
+        "mode": "fill",
+        "field": "#1f3fa8",
+        "center": [
+          2.5,
+          46.6
+        ],
+        "size": [
+          11,
+          9.5
+        ],
+        "glow": "#ffffff"
+      },
+      "focus": {
+        "lon": 2.5,
+        "lat": 46.5,
+        "zoom": 3.2
+      },
       "summary": "法國海軍在 1930 年代建造了設計新穎的敦克爾克級與黎胥留級戰艦；1940 年法國戰敗後，艦隊的歸屬成為各方角力的焦點。",
-      "classes": ["richelieu-class"]
+      "classes": [
+        "richelieu-class"
+      ],
+      "territory": [
+        "Algeria",
+        "Morocco",
+        "Tunisia",
+        "Mauritania",
+        "Senegal",
+        "Mali",
+        "Guinea",
+        "Côte d'Ivoire",
+        "Burkina Faso",
+        "Benin",
+        "Niger",
+        "Chad",
+        "Central African Rep.",
+        "Congo",
+        "Gabon",
+        "Cameroon",
+        "Togo",
+        "Madagascar",
+        "Djibouti",
+        "Syria",
+        "Lebanon",
+        "Vietnam",
+        "Laos",
+        "Cambodia",
+        "New Caledonia"
+      ],
+      "territoryNote": "二戰前夕的法國及其殖民地、保護國與託管地"
     },
     {
       "id": "russia",
@@ -61,10 +359,46 @@
       "name": "俄國／蘇聯",
       "nameEn": "Russia / Soviet Union",
       "navy": "俄羅斯帝國海軍、蘇聯海軍",
-      "flag": { "file": "ussr.svg", "name": "蘇聯國旗（簡化繪製）", "center": [44, 57], "width": 46 },
-      "focus": { "lon": 40, "lat": 58, "zoom": 1.7 },
+      "flag": {
+        "file": "ussr.svg",
+        "name": "蘇聯國旗（簡化繪製）",
+        "mode": "emblem",
+        "field": "#cc0000",
+        "emblem": "ussr-emblem.svg",
+        "center": [
+          80,
+          58
+        ],
+        "size": 17,
+        "glow": "#ffd700",
+        "territoryStyle": "solid"
+      },
+      "focus": {
+        "lon": 40,
+        "lat": 58,
+        "zoom": 1.7
+      },
       "summary": "俄國海軍在日俄戰爭後重建，建造了甘古特級無畏艦；這批戰艦後來由蘇聯海軍接收，一路服役到第二次世界大戰。",
-      "classes": ["gangut-class"]
+      "classes": [
+        "gangut-class"
+      ],
+      "territory": [
+        "Ukraine",
+        "Belarus",
+        "Estonia",
+        "Latvia",
+        "Lithuania",
+        "Moldova",
+        "Georgia",
+        "Armenia",
+        "Azerbaijan",
+        "Kazakhstan",
+        "Uzbekistan",
+        "Turkmenistan",
+        "Kyrgyzstan",
+        "Tajikistan"
+      ],
+      "territoryNote": "蘇聯全境（1945 年）"
     },
     {
       "id": "italy",
@@ -72,10 +406,38 @@
       "name": "義大利",
       "nameEn": "Kingdom of Italy",
       "navy": "義大利皇家海軍（Regia Marina）",
-      "flag": { "file": "italy.svg", "name": "義大利王國國旗（1861–1946，簡化繪製）", "center": [12.4, 42.6], "width": 11 },
-      "focus": { "lon": 12.5, "lat": 42.5, "zoom": 3.2 },
+      "flag": {
+        "file": "italy.svg",
+        "name": "義大利王國國旗（1861–1946，簡化繪製）",
+        "mode": "fill",
+        "field": "#1a9a4a",
+        "center": [
+          12.4,
+          42.4
+        ],
+        "size": [
+          9.5,
+          11.5
+        ],
+        "glow": "#ffffff"
+      },
+      "focus": {
+        "lon": 12.5,
+        "lat": 42.5,
+        "zoom": 3.2
+      },
       "summary": "義大利皇家海軍是地中海的主要海軍力量之一，擁有高速的現代化戰艦，但長期受燃油短缺與缺乏航空母艦所限。",
-      "classes": ["littorio-class"]
+      "classes": [
+        "littorio-class"
+      ],
+      "territory": [
+        "Libya",
+        "Eritrea",
+        "Somalia",
+        "Ethiopia",
+        "Albania"
+      ],
+      "territoryNote": "1940 年前後的義大利王國及其殖民地"
     },
     {
       "id": "china",
@@ -83,10 +445,36 @@
       "name": "中國",
       "nameEn": "Republic of China",
       "navy": "中華民國海軍",
-      "flag": { "file": "roc.svg", "name": "青天白日滿地紅旗", "center": [104, 35], "width": 44 },
-      "focus": { "lon": 110, "lat": 33, "zoom": 1.8 },
+      "flag": {
+        "file": "roc.svg",
+        "name": "青天白日滿地紅旗",
+        "mode": "emblem",
+        "field": "#e60000",
+        "emblem": "roc-emblem.svg",
+        "center": [
+          104,
+          37.5
+        ],
+        "size": 13,
+        "glow": "#ffffff",
+        "territoryStyle": "solid"
+      },
+      "focus": {
+        "lon": 110,
+        "lat": 33,
+        "zoom": 1.8
+      },
       "summary": "甲午戰爭後中國海軍元氣大傷。1930 年代國民政府嘗試重建艦隊，寧海級輕巡洋艦是當時最新銳的主力軍艦。",
-      "classes": ["ning-hai-class"]
+      "classes": [
+        "ning-hai-class"
+      ],
+      "territory": [
+        "Mongolia",
+        "Taiwan",
+        "Hong Kong",
+        "Macao"
+      ],
+      "territoryNote": "中華民國憲法所稱的固有疆域（以現今國界近似，未含邊境零星地區）"
     }
   ]
 }

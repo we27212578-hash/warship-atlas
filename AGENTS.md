@@ -55,7 +55,8 @@ vendor/                 第三方函式庫與世界地圖，不要修改
 | 國家 id | 英文常用名 | `japan`、`uk`、`usa` |
 | 艦級 id | `<名稱>-class` | `yamato-class`、`iowa-class` |
 | 艦級檔案 | `data/<國家id>/<艦級id>.json`，檔名必須等於檔內的 `id` | `data/japan/yamato-class.json` |
-| 國旗檔 | `assets/flags/<國家id>.svg`（政權名稱與國家 id 不同時可用政權名） | `japan.svg`、`ussr.svg` |
+| 國旗檔 | `assets/flags/<國家id>.svg`（政權名稱與國家 id 不同時可用政權名） | `usa.svg`、`ussr.svg` |
+| 徽記檔 | `assets/flags/<國旗名>-emblem.svg`，正方形、背景透明 | `roc-emblem.svg` |
 | 本地照片 | `assets/photos/<船艦id>-<內容>.jpg` | `yamato-trials.jpg` |
 
 ---
@@ -66,22 +67,56 @@ vendor/                 第三方函式庫與世界地圖，不要修改
 
 ```json
 {
-  "id": "japan",
-  "isoNumeric": "392",
-  "name": "日本",
-  "nameEn": "Empire of Japan",
-  "navy": "大日本帝國海軍",
-  "flag": { "file": "japan.svg", "name": "日章旗", "center": [138, 37], "width": 15 },
-  "focus": { "lon": 137, "lat": 35, "zoom": 2.2 },
+  "id": "china",
+  "isoNumeric": "156",
+  "name": "中國",
+  "nameEn": "Republic of China",
+  "navy": "中華民國海軍",
+  "flag": {
+    "file": "roc.svg",
+    "name": "青天白日滿地紅旗",
+    "mode": "emblem",
+    "field": "#e60000",
+    "emblem": "roc-emblem.svg",
+    "center": [104, 37.5],
+    "size": 13,
+    "glow": "#ffffff",
+    "territoryStyle": "solid"
+  },
+  "territory": ["Mongolia", "Taiwan", "Hong Kong", "Macao"],
+  "territoryNote": "中華民國憲法所稱的固有疆域（以現今國界近似）",
+  "focus": { "lon": 110, "lat": 33, "zoom": 1.8 },
   "summary": "一到兩句話介紹這個國家 1945 年以前的海軍。",
-  "classes": ["yamato-class"]
+  "classes": ["ning-hai-class"]
 }
 ```
 
-- `isoNumeric`：ISO 3166-1 數字代碼（字串，三位數），用來對應 `vendor/` 世界地圖上的國界。
-- `flag.center`：國旗中心的 `[經度, 緯度]`；`flag.width`：國旗寬度佔幾度經度。調到國旗大致蓋住本土即可。
+- `isoNumeric`：ISO 3166-1 數字代碼（字串，三位數），對應 `vendor/` 世界地圖上的「本土」。**滑鼠要移到本土上才會觸發**，領土範圍只是顯示用。
 - `focus`：點進這個國家時鏡頭對準的位置與縮放（小國用 3 左右，大國用 1.5–2）。
 - `classes`：艦級 id 的清單，順序就是畫面上的順序。可以是空陣列，畫面會顯示「建置中」。
+
+**國旗 `flag`**：滑鼠移到國家上時的呈現方式，依國旗的設計二選一。
+
+| `mode` | 適用 | 畫面效果 | `size` |
+| --- | --- | --- | --- |
+| `emblem` | 國旗是「單色底 + 一個徽記」（中華民國、蘇聯、1935–45 德國） | 整片領土塗滿 `field` 底色，徽記 `emblem` 放在 `center`，並向外放射光芒 | 一個數字：徽記直徑（度） |
+| `fill` | 國旗沒有單一徽記，或圖案佈滿整面（英、法、義、美、日本旭日旗） | 整面國旗以 `center` 為中心、等比例放大到蓋滿本土，整體發光；本土以外的領土塗 `field` 代表色 | `[寬, 高]`：要蓋滿的範圍（度） |
+
+- `file`：完整國旗，用於清單與面板上的小圖，`fill` 模式也用它鋪在本土上。
+- `emblem`：只有徽記、背景透明的正方形 SVG，檔名 `<國旗名>-emblem.svg`。
+- `center`：`[經度, 緯度]`。`emblem` 模式放在**整個領土範圍視覺上的中央**（不是首都、也不是本土的中央）；`fill` 模式放在本土中央。
+- `field`：`emblem` 模式是國旗底色；`fill` 模式是海外領土的代表色（取國旗的主色）。
+- `glow`：光芒的顏色，預設白色；徽記是金色就用金色。
+- `territoryStyle`：`"solid"` 表示本土以外的領土與本土同樣濃度（領土本來就是該國的一部分，如蘇聯各加盟共和國）；省略則較淡（殖民地、佔領區）。
+- 調整 `center`、`size` 後一定要實際打開網頁，把滑鼠移上去確認徽記沒有偏到一邊、國旗有蓋滿本土。
+
+**歷史領土 `territory`**：滑鼠移到國家上時一併亮起的範圍，代表該國「最廣為人知」的疆域。
+
+- 寫法一：`"Mongolia"`：整個現今國家，名稱必須與 `vendor/countries-50m.json` 內的英文國名完全相同（`node scripts/validate.mjs` 會檢查）。
+- 寫法二：`{ "name": "Russia", "clip": [[經度, 緯度], …] }`：只取該國落在多邊形內的部分，用於佔領區、割讓地等不是整個國家的情況。
+- 選擇原則：殖民帝國用二戰前夕的範圍；軍事擴張的國家用其歷史上的最大範圍；有領土主張的國家依其當時的憲法或官方主張。
+- 地圖是現今國界，只能近似。`territoryNote` 必須用一句話說明顯示的是什麼範圍、哪個年代，並註明是近似；這句話會顯示在提示框中。
+- 不確定某地當時是否屬於該國時，不要加入。
 
 ### 4.2 艦級：`data/<國家id>/<艦級id>.json`
 
@@ -190,10 +225,10 @@ vendor/                 第三方函式庫與世界地圖，不要修改
 3. 執行 `node scripts/validate.mjs`。
 
 ### 新增一個國家
-1. 在 `assets/flags/` 新增該國 **1945 年以前、該艦隊所屬時代** 的國旗 SVG（需有 `width`、`height` 屬性，比例照實際國旗）。
-2. 在 `data/countries.json` 的 `countries` 陣列加入一筆（格式見 4.1）。
+1. 在 `assets/flags/` 新增該國 **1945 年以前、該艦隊所屬時代** 的國旗 SVG（需有 `width`、`height` 屬性，比例照實際國旗）。國旗若是「單色底 + 徽記」，再另外做一個徽記檔。
+2. 在 `data/countries.json` 的 `countries` 陣列加入一筆（格式見 4.1），決定 `flag.mode`，並列出 `territory` 與 `territoryNote`。
 3. 建立資料夾 `data/<國家id>/`，並依「新增一個艦級」的步驟加入至少一個艦級。
-4. 執行 `node scripts/validate.mjs`，再用瀏覽器確認：國家會發光、滑鼠移上去國旗位置正確、點得進去。
+4. 執行 `node scripts/validate.mjs`，再用瀏覽器確認：國家會發光；滑鼠移上去時徽記或國旗在正中央、光芒正常、歷史領土範圍正確；點得進去。
 
 以上四種情況都 **不需要** 修改 `js/`、`css/` 或 `index.html`。
 
@@ -216,6 +251,7 @@ vendor/                 第三方函式庫與世界地圖，不要修改
 
 - 氛圍：燈光昏暗的情報室裡，一面發光的戰略地球。
 - 顏色：黑底（`--bg`）配發光的藍（`--blue`、`--blue-bright`）。新增元素一律使用 `css/style.css` 中 `:root` 的變數，不要寫死新的顏色。
+- 國旗的呈現：徽記或國旗一律置中，光芒是「清楚的放射狀光線」，不要做成模糊的光暈。
 - 例外只有兩種：國旗本身的顏色，以及四種事件類型的標記色（`--c-origin`、`--c-battle`、`--c-event`、`--c-fate`）。
 - 字體：內文用 `--sans`，標籤、日期、數據用等寬的 `--mono`。
 - 面板：半透明深藍底、細藍框、左上角有亮角。新的區塊沿用 `.panel`、`.card`、`.event-item`、`.photo` 等現有類別。
@@ -230,7 +266,7 @@ vendor/                 第三方函式庫與世界地圖，不要修改
 - `js/` 裡不可以出現任何特定國家、船艦的名稱或內容；那些都屬於 `data/`。
 - 所有層級都必須能用 `ESC` 回到上一層，並且有對應的網址（`#/...`）。新增任何層級或彈出視窗時都要遵守。
 - 所有路徑使用相對路徑（不要以 `/` 開頭），否則在 GitHub Pages 的子路徑下會失效。
-- 修改 `js/globe.js` 後，確認轉動地球時仍然流暢：底圖只在視角改變時重畫，轉動中使用低解析度地圖。
+- 修改 `js/globe.js` 後，確認轉動地球時仍然流暢：底圖與各國的領土圖層只在視角改變時重畫，轉動中使用低解析度地圖。
 - 註解使用繁體中文，說明「為什麼」而不是重複程式碼在做什麼。
 
 ---
