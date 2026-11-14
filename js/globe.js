@@ -382,7 +382,7 @@ export class Globe {
         ctx.drawImage(entry.emblemImg, -r, -r, r * 2, r * 2);
       });
     } else {
-      if (shown) { const r = flag.spill ? flag.spill * k * 0.8 : Math.max(Math.min(size[0], size[1]) * k / 2, 14); local(() => this._drawRays(0, 0, r * 0.9, r * 2.3, glow, a * 0.8, t, 32)); }
+      if (shown) { const r = flag.spill ? flag.spill * 1.7 / 2 * k * (entry.flagImg ? entry.flagImg.height / entry.flagImg.width : 0.6) * 0.8 : Math.max(Math.min(size[0], size[1]) * k / 2, 14); local(() => this._drawRays(0, 0, r * 0.9, r * (flag.spill ? 1.9 : 2.3), glow, a * 0.8, t, 32)); }
       layer();
     }
   }
@@ -451,19 +451,33 @@ export class Globe {
     const spill = flag.mode !== 'emblem' && flag.spill && entry.flagImg && this._visible(flag.center[0], flag.center[1]);
     const flagSize = flag.mode === 'emblem' ? null : (flag.spill ? { width: flag.spill * 1.7 } : flag.size);
     if (spill) {
+      // 國旗四邊都要在碰到邊緣之前淡到完全透明，才不會看到一塊長方形貼在地圖上。
+      // 畫兩層：下層是模糊且範圍較大的國旗，上層是清楚但範圍較小的國旗，疊起來就是「愈往外愈模糊、愈淡」。
+      const img = entry.flagImg, [lon, lat] = flag.center;
       const sc = this._scratch || (this._scratch = document.createElement('canvas'));
       if (sc.width !== c.width || sc.height !== c.height) { sc.width = c.width; sc.height = c.height; }
       const sg = sc.getContext('2d');
-      sg.setTransform(dpr, 0, 0, dpr, 0, 0); sg.globalCompositeOperation = 'source-over'; sg.clearRect(0, 0, w, h);
-      this._drawFlagOnSphere(sg, entry.flagImg, flag.center[0], flag.center[1], flagSize, this.moving ? 8 : 16);
-      const [sx, sy] = this.projection(flag.center), f = this._localFrame(flag.center[0], flag.center[1]), r = flag.spill * RAD * R;
-      sg.globalCompositeOperation = 'destination-in';
-      sg.save(); sg.transform(f.a, f.b, f.c, f.d, sx, sy);
-      const fade = sg.createRadialGradient(0, 0, 0, 0, 0, r);
-      fade.addColorStop(0, 'rgba(0,0,0,0.85)'); fade.addColorStop(0.4, 'rgba(0,0,0,0.7)'); fade.addColorStop(0.75, 'rgba(0,0,0,0.3)'); fade.addColorStop(1, 'rgba(0,0,0,0)');
-      sg.fillStyle = fade; sg.fillRect(-r * 4, -r * 4, r * 8, r * 8);
-      sg.restore();
-      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(sc, 0, 0); g.restore();
+      const [sx, sy] = this.projection([lon, lat]), f = this._localFrame(lon, lat);
+      const hw = flagSize.width / 2 * RAD * R, hh = hw * img.height / img.width;
+      const pass = (solidTo, fadeTo, blurPx) => {
+        sg.setTransform(dpr, 0, 0, dpr, 0, 0); sg.globalCompositeOperation = 'source-over'; sg.clearRect(0, 0, w, h);
+        this._drawFlagOnSphere(sg, img, lon, lat, flagSize, this.moving ? 8 : 16);
+        sg.globalCompositeOperation = 'destination-in';
+        sg.save(); sg.transform(f.a, f.b, f.c, f.d, sx, sy);
+        const edge = (fadeTo - solidTo) / (2 * fadeTo);
+        for (const [gx, gy] of [[hw * fadeTo, 0], [0, hh * fadeTo]]) {   // 先淡左右兩邊，再淡上下兩邊
+          const grad = sg.createLinearGradient(-gx, -gy, gx, gy);
+          grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(edge, 'rgba(0,0,0,1)');
+          grad.addColorStop(1 - edge, 'rgba(0,0,0,1)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+          sg.fillStyle = grad; sg.fillRect(-hw * 6, -hw * 6, hw * 12, hw * 12);
+        }
+        sg.restore();
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+        if (blurPx) { try { g.filter = `blur(${blurPx}px)`; } catch (e) { /* 不支援就只淡出不模糊 */ } }
+        g.drawImage(sc, 0, 0); g.restore();
+      };
+      pass(0.3, 0.98, Math.max(3, hh * 0.09) * dpr);
+      pass(0.25, 0.72, 0);
     }
 
     // 本土以外的歷史領土：國旗底色。核心領土與本土同濃度，其餘稍微透明
