@@ -963,7 +963,27 @@
       ],
       "territory": [
         "Denmark",
-        "Norway",
+        {
+          "name": "Norway",
+          "clip": [
+            [
+              3,
+              57
+            ],
+            [
+              32,
+              57
+            ],
+            [
+              32,
+              71.6
+            ],
+            [
+              3,
+              71.6
+            ]
+          ]
+        },
         "Netherlands",
         "Belgium",
         "Estonia",
