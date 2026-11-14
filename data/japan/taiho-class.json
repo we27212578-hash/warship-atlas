@@ -5,8 +5,8 @@
   "type": "航空母艦",
   "years": "1941–1944",
   "image": {
-    "wiki": "Japanese aircraft carrier Taihō",
-    "caption": "航空母艦大鳳"
+    "caption": "航空母艦大鳳",
+    "file": "Japanese aircraft carrier Taiho 01.jpg"
   },
   "summary": [
     "大鳳是日本第一艘採用裝甲飛行甲板的航空母艦。原本計畫建造多艘改良型，但都因戰局變化取消，同級只有大鳳一艘。",
@@ -19,8 +19,8 @@
       "nameEn": "Taihō",
       "tagline": "1944 年竣工 · 1944 年戰沉",
       "image": {
-        "wiki": "Japanese aircraft carrier Taihō",
-        "caption": "航空母艦大鳳"
+        "caption": "航空母艦大鳳",
+        "file": "Japanese aircraft carrier Taiho 01.jpg"
       },
       "summary": [
         "大鳳是日本第一艘採用裝甲飛行甲板的航空母艦，設計上能承受炸彈攻擊，被寄予厚望。",
@@ -77,12 +77,12 @@
           ],
           "images": [
             {
-              "wiki": "Japanese aircraft carrier Taihō",
-              "caption": "航空母艦大鳳"
+              "caption": "航空母艦大鳳",
+              "file": "Japanese aircraft carrier Taiho 01.jpg"
             },
             {
-              "wiki": "Kobe",
-              "caption": "神戶"
+              "file": "Japanese aircraft carrier Taiho 02.jpg",
+              "caption": "航空母艦大鳳"
             }
           ]
         },

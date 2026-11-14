@@ -5,8 +5,8 @@
   "type": "重巡洋艦",
   "years": "1934–1945",
   "image": {
-    "wiki": "Tone-class cruiser",
-    "caption": "利根級"
+    "caption": "利根級",
+    "file": "Tone 1942 (cropped).jpg"
   },
   "summary": [
     "利根級是專為機動部隊擔任偵察而設計的重巡洋艦，共 2 艘：利根、筑摩。4 座主砲塔全部集中在前方，後半部是可搭載約 5 架水上偵察機的飛機甲板。",
@@ -19,8 +19,8 @@
       "nameEn": "Tone",
       "tagline": "一號艦 · 1938 年竣工 · 1945 年著底",
       "image": {
-        "wiki": "Japanese cruiser Tone",
-        "caption": "重巡洋艦利根"
+        "caption": "重巡洋艦利根",
+        "file": "Japanese cruiser Tone.jpg"
       },
       "summary": [
         "利根是利根級一號艦，專為機動部隊擔任偵察而設計，參與了珍珠港、印度洋、中途島與雷伊泰灣等作戰。",
@@ -82,8 +82,8 @@
           ],
           "images": [
             {
-              "wiki": "Tone-class cruiser",
-              "caption": "利根級"
+              "caption": "利根級",
+              "file": "Tone 1942 (cropped).jpg"
             },
             {
               "wiki": "Aichi E13A",
@@ -166,8 +166,8 @@
       ],
       "sources": [
         {
-          "title": "Wikipedia: Japanese cruiser Tone",
-          "url": "https://en.wikipedia.org/wiki/Japanese_cruiser_Tone"
+          "title": "Wikipedia: Japanese cruiser Tone (1937)",
+          "url": "https://en.wikipedia.org/wiki/Japanese_cruiser_Tone_(1937)"
         },
         {
           "title": "Wikipedia: Tone-class cruiser",
@@ -181,7 +181,7 @@
       "nameEn": "Chikuma",
       "tagline": "二號艦 · 1939 年竣工 · 1944 年戰沉",
       "image": {
-        "wiki": "Japanese cruiser Chikuma",
+        "wiki": "Japanese cruiser Chikuma (1938)",
         "caption": "重巡洋艦筑摩"
       },
       "summary": [
@@ -240,8 +240,8 @@
           ],
           "images": [
             {
-              "wiki": "Tone-class cruiser",
-              "caption": "利根級"
+              "caption": "利根級",
+              "file": "Tone 1942 (cropped).jpg"
             },
             {
               "wiki": "Aichi E13A",
@@ -300,8 +300,8 @@
       ],
       "sources": [
         {
-          "title": "Wikipedia: Japanese cruiser Chikuma",
-          "url": "https://en.wikipedia.org/wiki/Japanese_cruiser_Chikuma"
+          "title": "Wikipedia: Japanese cruiser Chikuma (1938)",
+          "url": "https://en.wikipedia.org/wiki/Japanese_cruiser_Chikuma_(1938)"
         },
         {
           "title": "Wikipedia: Tone-class cruiser",
