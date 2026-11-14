@@ -29,8 +29,23 @@
       },
       "summary": "日本海軍在二十世紀前半從甲午、日俄戰爭一路擴張，至太平洋戰爭開戰時已是世界第三大海軍，並建造了史上最大的戰艦大和級。",
       "classes": [
+        "kongo-class",
+        "fuso-class",
+        "nagato-class",
         "yamato-class",
-        "akagi-class"
+        "hosho-class",
+        "akagi-class",
+        "kaga-class",
+        "ryujo-class",
+        "soryu-class",
+        "hiryu-class",
+        "shokaku-class",
+        "taiho-class",
+        "unryu-class",
+        "myoko-class",
+        "takao-class",
+        "mogami-class",
+        "tone-class"
       ],
       "territory": [
         "Myanmar",
