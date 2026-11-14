@@ -530,24 +530,42 @@ export class Globe {
     g.restore();
   }
 
-  // 從 (x, y) 向外放射的光芒：長短相間、緩慢轉動，邊緣清楚而不是糊成一片
+  // 從 (x, y) 向外放射的光芒：像鏡頭對著強光時的星芒。
+  // 中心一圈柔和的光暈，外加許多粗細、長短、亮度都不同的細光絲，各自緩慢閃爍。
   _drawRays(x, y, r0, r1, color, alpha, t, n) {
     const { ctx } = this;
-    const pulse = 0.92 + 0.08 * Math.sin(t / 500);
+    const rnd = (i, k) => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
+    const span = r1 - r0;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.translate(x, y); ctx.rotate(t / 14000);
-    const half = r0 * Math.sin(Math.PI / n) * 0.55;
-    for (const long of [true, false]) {
-      const len = (r1 - r0) * (long ? 1 : 0.6) * pulse;
-      const grad = ctx.createLinearGradient(r0, 0, r0 + len, 0);
-      grad.addColorStop(0, hexA(color, 0.85 * alpha)); grad.addColorStop(1, hexA(color, 0));
-      ctx.fillStyle = grad;
-      for (let i = long ? 0 : 1; i < n; i += 2) {
-        ctx.save(); ctx.rotate(i * 2 * Math.PI / n);
-        ctx.beginPath(); ctx.moveTo(r0, -half); ctx.lineTo(r0 + len, 0); ctx.lineTo(r0, half); ctx.closePath(); ctx.fill();
-        ctx.restore();
-      }
+    ctx.translate(x, y);
+
+    // 光暈
+    const halo = ctx.createRadialGradient(0, 0, r0 * 0.55, 0, 0, r0 + span * 0.85);
+    halo.addColorStop(0, hexA(color, 0.55 * alpha)); halo.addColorStop(0.35, hexA(color, 0.22 * alpha)); halo.addColorStop(1, hexA(color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(0, 0, r0 + span * 0.85, 0, 7); ctx.fill();
+
+    // 光絲：長度分成幾級，每級共用一個漸層
+    ctx.rotate(t / 26000);
+    const count = n * 4, levels = [0.45, 0.8, 1.25, 1.9, 2.9];
+    const grads = levels.map(m => {
+      const g = ctx.createLinearGradient(r0 * 0.8, 0, r0 + span * m, 0);
+      g.addColorStop(0, hexA(color, 0.9)); g.addColorStop(0.35, hexA(color, 0.45)); g.addColorStop(1, hexA(color, 0));
+      return g;
+    });
+    for (let i = 0; i < count; i++) {
+      const h = rnd(i, 1);
+      const lv = h < 0.4 ? 0 : h < 0.7 ? 1 : h < 0.88 ? 2 : h < 0.97 ? 3 : 4;   // 多數短、少數特別長
+      const len = span * levels[lv];
+      const half = Math.max(0.5, r0 * (0.006 + 0.016 * rnd(i, 2)));
+      const flicker = 0.7 + 0.3 * Math.sin(t / (500 + 900 * rnd(i, 3)) + i);
+      ctx.save();
+      ctx.rotate((i + rnd(i, 4) * 0.9) * 2 * Math.PI / count);
+      ctx.globalAlpha = alpha * (0.25 + 0.75 * rnd(i, 5)) * flicker;
+      ctx.fillStyle = grads[lv];
+      ctx.beginPath(); ctx.moveTo(r0 * 0.8, -half); ctx.lineTo(r0 + len, 0); ctx.lineTo(r0 * 0.8, half); ctx.closePath(); ctx.fill();
+      ctx.restore();
     }
     ctx.restore();
   }
