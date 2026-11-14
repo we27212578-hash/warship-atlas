@@ -5,7 +5,7 @@
   "type": "輕巡洋艦",
   "years": "1931–1944",
   "image": {
-    "wiki": "Ning Hai-class cruiser",
+    "wiki": "Chinese cruiser Ning Hai",
     "caption": "寧海級輕巡洋艦"
   },
   "summary": [
@@ -94,10 +94,6 @@
               "caption": "寧海號輕巡洋艦"
             },
             {
-              "wiki": "Ning Hai-class cruiser",
-              "caption": "寧海級輕巡洋艦"
-            },
-            {
               "wiki": "Chinese cruiser Ping Hai",
               "caption": "姊妹艦平海號"
             }
@@ -120,8 +116,8 @@
           ],
           "images": [
             {
-              "wiki": "Battle of Jiangyin",
-              "caption": "江陰海戰"
+              "wiki": "Jiangyin",
+              "caption": "江陰"
             },
             {
               "wiki": "Chinese cruiser Ping Hai",

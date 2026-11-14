@@ -29,7 +29,7 @@ export function thumbHTML(image) {
 async function fetchWiki(titles) {
   const need = titles.filter(t => !cache.has(t));
   if (need.length) {
-    const url = `${API}?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail|original&pithumbsize=900&pilicense=free&titles=${encodeURIComponent(need.join('|'))}`;
+    const url = `${API}?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail|original&pithumbsize=960&pilicense=free&pilimit=50&titles=${encodeURIComponent(need.join('|'))}`;
     const req = fetch(url).then(r => r.json()).then(j => {
       const q = j.query || {}, alias = new Map();
       for (const n of q.normalized || []) alias.set(n.from, n.to);
@@ -57,8 +57,8 @@ async function resolve(image) {
   if (image.file) {
     const f = encodeURIComponent(image.file.replace(/ /g, '_'));
     return {
-      thumb: `https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=900`,
-      full: `https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=1800`,
+      thumb: `https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=960`,
+      full: `https://commons.wikimedia.org/wiki/Special:FilePath/${f}?width=1920`,
       page: `https://commons.wikimedia.org/wiki/File:${f}`
     };
   }
@@ -80,7 +80,7 @@ export async function hydrate(root, onOpen) {
     const fail = () => { if (fig.parentElement && fig.parentElement.classList.contains('gallery')) fig.remove(); else frame.className = 'frame failed'; };
     if (!r) { fail(); continue; }
     const img = new Image();
-    img.alt = image.caption || ''; img.loading = 'lazy';
+    img.alt = image.caption || '';   // 注意：不要加 loading='lazy'，圖片還沒放進頁面時瀏覽器會一直不下載
     img.onload = () => { frame.className = 'frame'; frame.appendChild(img); };
     img.onerror = fail;
     img.src = r.thumb;
@@ -91,7 +91,7 @@ export async function hydrate(root, onOpen) {
   for (const el of thumbs) {
     const r = await resolve(JSON.parse(el.dataset.thumb));
     if (!r) continue;
-    const img = new Image(); img.alt = ''; img.loading = 'lazy';
+    const img = new Image(); img.alt = '';
     img.onload = () => el.appendChild(img);
     img.src = r.thumb;
   }

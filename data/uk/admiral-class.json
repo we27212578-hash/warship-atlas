@@ -5,7 +5,7 @@
   "type": "戰鬥巡洋艦",
   "years": "1916–1941",
   "image": {
-    "wiki": "Admiral-class battlecruiser",
+    "wiki": "HMS Hood",
     "caption": "海軍上將級戰鬥巡洋艦"
   },
   "summary": [
@@ -92,10 +92,6 @@
             {
               "wiki": "John Brown & Company",
               "caption": "約翰·布朗公司"
-            },
-            {
-              "wiki": "Admiral-class battlecruiser",
-              "caption": "海軍上將級戰鬥巡洋艦"
             }
           ]
         },
