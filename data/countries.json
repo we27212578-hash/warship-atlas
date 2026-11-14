@@ -19,7 +19,8 @@
           15,
           15
         ],
-        "glow": "#ffd9d9"
+        "glow": "#ffd9d9",
+        "spill": 10
       },
       "focus": {
         "lon": 137,
@@ -1288,7 +1289,8 @@
           9,
           11
         ],
-        "glow": "#ffffff"
+        "glow": "#ffffff",
+        "spill": 7.5
       },
       "focus": {
         "lon": -3,
@@ -1362,7 +1364,8 @@
           11,
           9.5
         ],
-        "glow": "#ffffff"
+        "glow": "#ffffff",
+        "spill": 7.5
       },
       "focus": {
         "lon": 2.5,
@@ -1468,7 +1471,8 @@
           9.5,
           11.5
         ],
-        "glow": "#ffffff"
+        "glow": "#ffffff",
+        "spill": 7.5
       },
       "focus": {
         "lon": 12.5,

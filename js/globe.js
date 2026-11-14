@@ -382,7 +382,7 @@ export class Globe {
         ctx.drawImage(entry.emblemImg, -r, -r, r * 2, r * 2);
       });
     } else {
-      if (shown) { const r = Math.max(Math.min(size[0], size[1]) * k / 2, 14); local(() => this._drawRays(0, 0, r * 0.9, r * 2.3, glow, a * 0.8, t, 32)); }
+      if (shown) { const r = flag.spill ? flag.spill * k * 0.8 : Math.max(Math.min(size[0], size[1]) * k / 2, 14); local(() => this._drawRays(0, 0, r * 0.9, r * 2.3, glow, a * 0.8, t, 32)); }
       layer();
     }
   }
@@ -399,7 +399,8 @@ export class Globe {
   _drawFlagOnSphere(g, img, lon, lat, size, n) {
     const az = d3.geoAzimuthalEquidistant().rotate([-lon, -lat]).scale(180 / Math.PI).translate([0, 0]);
     const aspect = img.width / img.height;
-    const W = Math.max(size[0], size[1] * aspect), H = W / aspect;   // 等比例放大到蓋滿指定範圍（單位：度）
+    // size 是 [寬, 高] 時等比例放大到蓋滿；是 { width } 時整面國旗以該寬度完整呈現（單位：度）
+    const W = Array.isArray(size) ? Math.max(size[0], size[1] * aspect) : size.width, H = W / aspect;
     const nx = n, ny = Math.max(4, Math.round(n / aspect));
     const pts = [];
     for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
@@ -446,6 +447,25 @@ export class Globe {
     g.save();
     g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
 
+    // 本土太小的國家：國旗先以圓形範圍鋪在國界外，愈往外愈淡，上面再疊領土與清楚的本土
+    const spill = flag.mode !== 'emblem' && flag.spill && entry.flagImg && this._visible(flag.center[0], flag.center[1]);
+    const flagSize = flag.mode === 'emblem' ? null : (flag.spill ? { width: flag.spill * 1.7 } : flag.size);
+    if (spill) {
+      const sc = this._scratch || (this._scratch = document.createElement('canvas'));
+      if (sc.width !== c.width || sc.height !== c.height) { sc.width = c.width; sc.height = c.height; }
+      const sg = sc.getContext('2d');
+      sg.setTransform(dpr, 0, 0, dpr, 0, 0); sg.globalCompositeOperation = 'source-over'; sg.clearRect(0, 0, w, h);
+      this._drawFlagOnSphere(sg, entry.flagImg, flag.center[0], flag.center[1], flagSize, this.moving ? 8 : 16);
+      const [sx, sy] = this.projection(flag.center), f = this._localFrame(flag.center[0], flag.center[1]), r = flag.spill * RAD * R;
+      sg.globalCompositeOperation = 'destination-in';
+      sg.save(); sg.transform(f.a, f.b, f.c, f.d, sx, sy);
+      const fade = sg.createRadialGradient(0, 0, 0, 0, 0, r);
+      fade.addColorStop(0, 'rgba(0,0,0,0.85)'); fade.addColorStop(0.4, 'rgba(0,0,0,0.7)'); fade.addColorStop(0.75, 'rgba(0,0,0,0.3)'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+      sg.fillStyle = fade; sg.fillRect(-r * 4, -r * 4, r * 8, r * 8);
+      sg.restore();
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(sc, 0, 0); g.restore();
+    }
+
     // 本土以外的歷史領土：國旗底色。核心領土與本土同濃度，其餘稍微透明
     const fillGroup = (grp, alpha) => {
       g.fillStyle = field; g.globalAlpha = alpha;
@@ -466,7 +486,7 @@ export class Globe {
       g.save(); g.beginPath(); path(core); g.clip();
       g.fillRect(cx - R, cy - R, R * 2, R * 2);   // 國旗蓋不到的離島先墊底色
       g.globalAlpha = 0.96;
-      this._drawFlagOnSphere(g, img, lon, lat, flag.size, this.moving ? 8 : 16);
+      this._drawFlagOnSphere(g, img, lon, lat, flagSize, this.moving ? 8 : 16);
       g.restore();
     }
 

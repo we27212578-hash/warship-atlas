@@ -33,6 +33,7 @@ for (const c of countries) {
     if (!['emblem', 'fill'].includes(c.flag.mode)) err(cw, 'flag.mode 必須是 emblem 或 fill');
     if (c.flag.mode === 'emblem' && !existsSync(join(root, 'assets/flags', c.flag.emblem || '-'))) err(cw, 'emblem 模式必須有 flag.emblem，且檔案要存在於 assets/flags/');
     if (c.flag.mode === 'emblem' && typeof c.flag.size !== 'number') err(cw, 'emblem 模式的 flag.size 是一個數字（徽記直徑，單位為度）');
+    if (c.flag.spill !== undefined && (c.flag.mode !== 'fill' || typeof c.flag.spill !== 'number')) err(cw, 'flag.spill 只能用在 fill 模式，值是一個數字（半徑，單位為度）');
     if (c.flag.mode === 'fill' && !(Array.isArray(c.flag.size) && c.flag.size.length === 2)) err(cw, 'fill 模式的 flag.size 是 [寬, 高]（單位為度）');
   }
   for (const t of [...(c.territory || []), ...(c.territoryCore || [])]) {
