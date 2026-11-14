@@ -15,8 +15,8 @@ const TYPE_LABEL = { origin: '建造背景', battle: '作戰經歷', event: '重
 // 艦種在網址中的代號與英文標籤。資料裡出現這張表以外的艦種時，直接用艦種名稱當代號。
 const SHIP_TYPES = {
   '戰艦': ['battleship', 'BATTLESHIPS'], '戰鬥巡洋艦': ['battlecruiser', 'BATTLECRUISERS'],
-  '航空母艦': ['carrier', 'AIRCRAFT CARRIERS'], '重巡洋艦': ['heavy-cruiser', 'HEAVY CRUISERS'],
-  '輕巡洋艦': ['light-cruiser', 'LIGHT CRUISERS'], '鐵甲艦': ['ironclad', 'IRONCLADS'],
+  '航空母艦': ['carrier', 'AIRCRAFT CARRIERS'], '大型巡洋艦': ['large-cruiser', 'LARGE CRUISERS'], '重巡洋艦': ['heavy-cruiser', 'HEAVY CRUISERS'],
+  '輕巡洋艦': ['light-cruiser', 'LIGHT CRUISERS'], '驅逐艦': ['destroyer', 'DESTROYERS'], '鐵甲艦': ['ironclad', 'IRONCLADS'],
   '其他大型艦艇': ['other', 'OTHER VESSELS']
 };
 const HOME_VIEW = { lon: 135, lat: 28, zoom: 1 };
@@ -174,6 +174,12 @@ function countryHead(country) {
     </div>`;
 }
 
+// 只收錄艦級介紹的艦種（例如驅逐艦）艘數為 0，此時不顯示艘數
+function shipCount(classes) {
+  const n = classes.reduce((sum, c) => sum + c.ships.length, 0);
+  return n ? ` · ${n} 艘` : '';
+}
+
 function renderTypes(country, types) {
   setLeft(`
     ${countryHead(country)}
@@ -181,7 +187,7 @@ function renderTypes(country, types) {
     <h3>艦種 TYPES</h3>
     <ul class="card-list">${types.map(t => `<li><button class="card" data-go="${esc(country.id)}/type-${esc(t.slug)}">
       ${thumbHTML(t.classes[0].image)}
-      <div><strong>${esc(t.name)}</strong><span>${t.en ? esc(t.en) + ' · ' : ''}${t.classes.length} 個艦級 · ${t.classes.reduce((n, c) => n + c.ships.length, 0)} 艘</span></div>
+      <div><strong>${esc(t.name)}</strong><span>${t.en ? esc(t.en) + ' · ' : ''}${t.classes.length} 個艦級${shipCount(t.classes)}</span></div>
     </button></li>`).join('')}</ul>`);
 }
 
@@ -189,13 +195,13 @@ function renderCountry(country, classes, type) {
   const cards = classes.length
     ? `<ul class="card-list">${classes.map(c => `<li><button class="card" data-go="${esc(country.id)}/${esc(c.id)}">
         ${thumbHTML(c.image)}
-        <div><strong>${esc(c.name)}</strong><span>${esc(c.type)} · ${esc(c.years)} · ${c.ships.length} 艘</span></div>
+        <div><strong>${esc(c.name)}</strong><span>${esc(c.type)} · ${esc(c.years)}${c.ships.length ? ` · ${c.ships.length} 艘` : ''}</span></div>
       </button></li>`).join('')}</ul>`
     : `<div class="empty">此國家的艦級資料建置中。</div>`;
   setLeft(type ? `
     <p class="eyebrow">${esc(country.name)} · ${esc(country.navy)}</p>
     <h2>${esc(type.name)}${type.en ? `<small>${esc(type.en)}</small>` : ''}</h2>
-    <div class="meta">${classes.length} 個艦級 · ${classes.reduce((n, c) => n + c.ships.length, 0)} 艘</div>
+    <div class="meta">${classes.length} 個艦級${shipCount(classes)}</div>
     <h3>艦級 CLASSES</h3>
     ${cards}` : `
     ${countryHead(country)}
@@ -212,6 +218,7 @@ function renderClass(country, cls) {
     ${photoHTML(cls.image)}
     ${paras(cls.summary)}
     <h3>同級艦 SHIPS</h3>
+    ${cls.ships.length ? '' : '<div class="empty">此艦級目前只收錄艦級介紹，未收錄個別船艦。</div>'}
     <ul class="card-list">${cls.ships.map(s => `<li><button class="card" data-go="${esc(country.id)}/${esc(cls.id)}/${esc(s.id)}">
       ${thumbHTML(s.image)}
       <div><strong>${esc(s.name)}</strong><span>${esc(s.nameEn)} · ${esc(s.tagline || '')}</span></div>
