@@ -1,6 +1,6 @@
 # 全球戰艦史料室 Global Warship Atlas
 
-點此開啟網站：https://github.com/we27212578-hash/warship-atlas
+點此開啟網站：https://we27212578-hash.github.io/warship-atlas/
 
 在情報室風格的 3D 地球上，瀏覽 1945 年以前各國大型艦艇的歷史。
 
